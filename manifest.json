@@ -1,12 +1,12 @@
 {
   "name": "INNTEO Sulas Field Tool",
   "short_name": "INNTEO",
-  "description": "HVAC / MaR Field Tool pro techniky v terénu",
-  "start_url": "/INNTEO-Field-Tool.html",
+  "description": "HVAC / MaR Field Tool",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0A0E17",
   "theme_color": "#F59E0B",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%23F59E0B' width='512' height='512' rx='80'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='220' font-weight='900' font-family='Arial' fill='%23000'%3EIS%3C/text%3E%3C/svg%3E",
