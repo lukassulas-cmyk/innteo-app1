@@ -41,6 +41,11 @@ jobs:
           npx cap add android
           npm run android:icons
           npx cap sync android
+          # menší distribuce Gradle + delší timeout stahování (výchozích 10 s nestačí)
+          sed -i 's/-all\.zip/-bin.zip/; s/^networkTimeout=.*/networkTimeout=120000/' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
+
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Verze aplikace
         run: |
