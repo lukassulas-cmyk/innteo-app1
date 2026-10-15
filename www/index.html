@@ -92,6 +92,7 @@ table.data-table td{padding:6px 10px;border-bottom:1px solid var(--border)}
 
 const APP_VERSION="4.0.0";
 const TABS=["protocol","checklist","errors","diag","calc","pt","fgas","clients","mar","codesys","cheat","ref","data"];
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 const IS_NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 
 // Bezpečné čtení z localStorage (poškozená data nesmí shodit aplikaci)
@@ -107,12 +108,21 @@ async function saveFile(name,content,mime){
     const{Filesystem,Share}=window.Capacitor.Plugins;
     const r=await Filesystem.writeFile({path:name,data:content,directory:"CACHE",encoding:"utf8"});
     await Share.share({title:name,url:r.uri,dialogTitle:"Uložit / odeslat soubor"});
-    return;
+    return true;
+  }
+  // iPhone/iPad: systémové Sdílet → Uložit do Souborů, Mail, WhatsApp, AirDrop…
+  if(IS_IOS&&navigator.canShare){
+    const file=new File([content],name,{type:mime});
+    if(navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:name});return true;}
+      catch(e){if(e.name==="AbortError")return false;}
+    }
   }
   const blob=new Blob([content],{type:mime+";charset=utf-8"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
+  return true;
 }
 function safeName(s){return String(s||"INNTEO").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_")}
 
@@ -1015,7 +1025,7 @@ ${f.hours?"<div style='background:#FEF3C7;border:1px solid #F59E0B;border-radius
 <div class="footer"><div class="sig"><div class="sig-line"></div><span>Technik</span><br><strong>${esc(f.techName)||""}</strong></div><div class="sig"><div class="sig-line"></div><span>Zákazník</span><br><strong>${esc(f.clientName)||""}</strong></div></div>
 <div style="text-align:center;margin-top:20px;font-size:7pt;color:#999">INNTEO Sulas s.r.o. • ${new Date().toLocaleString("cs-CZ")}</div></body></html>`;
   saveFile('servisni-protokol-'+safeName(f.clientName)+'-'+f.serviceDate+'.html',html,'text/html')
-    .then(()=>{if(!IS_NATIVE)toast('📄 Protokol stažen – otevřete ho a vytiskněte / uložte jako PDF (Ctrl+P).');})
+    .then(ok=>{if(ok&&!IS_NATIVE&&!IS_IOS)toast('📄 Protokol stažen – otevřete ho a vytiskněte / uložte jako PDF (Ctrl+P).');})
     .catch(e=>{
       try{const w=window.open("","_blank");w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);}
       catch(e2){alert('Chyba při tisku: '+e2.message);}
@@ -1367,7 +1377,7 @@ function exportBackup(){
   const data={app:"innteo-field-tool",version:APP_VERSION,exported:new Date().toISOString()};
   Object.keys(BACKUP_KEYS).forEach(k=>data[k]=state[k]);
   saveFile("innteo-zaloha-"+today()+".json",JSON.stringify(data,null,2),"application/json")
-    .then(()=>{store("innteo_last_backup",new Date().toISOString());render();})
+    .then(ok=>{if(!ok)return;store("innteo_last_backup",new Date().toISOString());render();})
     .catch(e=>alert(e.message));
 }
 
@@ -1455,6 +1465,8 @@ if (!IS_NATIVE && 'serviceWorker' in navigator && location.protocol !== 'file:')
     if (reloading) return; reloading = true; location.reload();
   });
 }
+// Požádat prohlížeč, aby data aplikace nemazal
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function(){});
 window.addEventListener('online', function(){ if (state.tab === 'data') render(); });
 window.addEventListener('offline', function(){ toast('🟠 Offline – data se ukládají v zařízení'); });
 
@@ -1483,9 +1495,8 @@ function showInstallBanner(app) {
     }},"⬇️ Nainstalovat aplikaci"));
   } else {
     // iOS Safari instructions
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      banner.append(h("div",{style:{color:"var(--dim)",lineHeight:"1.7"}},"1. Klepněte na ikonu Sdílet (⬆️ dole)\n2. Srolujte dolů → \"Přidat na plochu\"\n3. Potvrďte → hotovo!"));
+    if (IS_IOS) {
+      banner.append(h("div",{style:{color:"var(--dim)",lineHeight:"1.7",whiteSpace:"pre-line"}},"Otevřete tuto stránku v Safari a:\n1. Klepněte na ikonu Sdílet (čtvereček se šipkou ⬆️)\n2. Zvolte \"Přidat na plochu\"\n3. Potvrďte \"Přidat\" → ikona INNTEO je na ploše\nAplikace pak běží na celou obrazovku a funguje i offline."));
     } else {
       banner.append(h("div",{style:{color:"var(--dim)",lineHeight:"1.7"}},"Chrome: Menu (⋮) → \"Nainstalovat aplikaci\" nebo \"Přidat na plochu\"\nSafari: Sdílet → \"Přidat na plochu\""));
     }

@@ -8,7 +8,8 @@ Jedna aplikace, dvě podoby:
 
 | Podoba | Jak se k ní dostat |
 |---|---|
-| **Web / PWA** (Android, iPhone, PC) | GitHub Pages → otevřít v prohlížeči → „Nainstalovat aplikaci" / „Přidat na plochu" |
+| **iPhone / iPad** | V **Safari** otevřít web → Sdílet ⬆️ → „Přidat na plochu" |
+| **Web / PWA** (Android, PC) | Otevřít web v Chrome/Edge → „Nainstalovat aplikaci" |
 | **Android aplikace (APK)** | GitHub → Actions → *Android APK* → poslední běh → Artifacts → stáhnout a nainstalovat |
 
 Funguje **offline** – po prvním načtení se vše uloží v zařízení.
@@ -50,8 +51,13 @@ capacitor.config.json
 
 ## Jednorázové nastavení
 
-**Web (GitHub Pages):** Settings → Pages → *Source: GitHub Actions*.
-Adresa pak bude `https://lukassulas-cmyk.github.io/innteo-app1/`.
+**Web (GitHub Pages):** adresa je `https://lukassulas-cmyk.github.io/innteo-app1/`.
+Funguje při obou nastaveních Pages – při *Deploy from branch* (main, root) přesměruje
+kořenový `index.html` do `www/`; při *Source: GitHub Actions* se nasadí rovnou `www/`.
+
+**iPhone:** soubory (protokol, záloha, F-Gas CSV) se ukládají přes systémové *Sdílet*
+→ „Uložit do Souborů", Mail, WhatsApp… Data instalované aplikace iOS nemaže,
+v samotném Safari (bez přidání na plochu) je může po delší nečinnosti smazat.
 
 **Podepsané APK / Google Play (volitelné):** bez podpisu vzniká *debug* APK, které jde
 nainstalovat přímo do telefonu (povolit „instalaci z neznámých zdrojů").
