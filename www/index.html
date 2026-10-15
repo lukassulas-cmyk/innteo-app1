@@ -79,6 +79,9 @@ table.data-table td{padding:6px 10px;border-bottom:1px solid var(--border)}
 .diag-option:hover{border-color:var(--accent);background:rgba(245,158,11,.06)}
 .info-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-right:4px}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
+/* iOS: písmo < 16px v polích způsobí přiblížení stránky při klepnutí */
+@media(pointer:coarse){input.inp,select.inp,textarea.inp{font-size:16px}}
+html{-webkit-text-size-adjust:100%}
 </style>
 </head>
 <body>
@@ -94,6 +97,7 @@ const APP_VERSION="4.0.0";
 const TABS=["protocol","checklist","errors","diag","calc","pt","fgas","clients","mar","codesys","cheat","ref","data"];
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 const IS_NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const PLATFORM=IS_NATIVE?window.Capacitor.getPlatform():"web";
 
 // Bezpečné čtení z localStorage (poškozená data nesmí shodit aplikaci)
 function load(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def}catch(e){return def}}
@@ -795,6 +799,8 @@ let state={
   fgForm:{date:today(),action:"check",ref:"R410A",qty:"",tech:"",equip:"",sn:""},
   // Clients DB
   clients:load("innteo_clients",[]),
+  // Firma na protokolu (Data → Firma)
+  company:Object.assign({name:"INNTEO Sulas s.r.o.",line:"HVAC • MaR • Servis",contact:""},load("innteo_company",{})),
   // Archiv protokolů
   protocols:load("innteo_protocols",[]),
   clientForm:{name:"",address:"",phone:"",email:"",notes:""},
@@ -1003,7 +1009,7 @@ function archiveProtocol(f){
 }
 
 function printProtocol(f,ri){
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Protokol – INNTEO Sulas</title>
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Protokol – ${esc(state.company.name)}</title>
 <style>*{margin:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial;font-size:10pt;padding:25px;max-width:780px;margin:0 auto}
 h1{font-size:16pt;color:#F59E0B;border-bottom:3px solid #F59E0B;padding-bottom:6px}h2{font-size:12pt;margin:14px 0 6px;border-left:4px solid #F59E0B;padding-left:8px}
 table{width:100%;border-collapse:collapse;margin:6px 0}td{padding:5px 8px;border:1px solid #d1d5db;font-size:9pt}td:first-child{background:#f3f4f6;font-weight:600;width:28%}
@@ -1012,7 +1018,7 @@ table{width:100%;border-collapse:collapse;margin:6px 0}td{padding:5px 8px;border
 .sig{text-align:center;width:45%}.sig-line{border-bottom:1px solid #000;height:50px}
 .sig span{font-size:8pt;color:#6B7280}</style></head><body>
 <div style="display:flex;justify-content:space-between;margin-bottom:16px">
-<div><div style="font-size:20pt;font-weight:900;color:#F59E0B">INNTEO Sulas <span style="color:#6B7280;font-size:10pt;font-weight:400">s.r.o.</span></div><div style="font-size:8pt;color:#6B7280">HVAC • MaR • Servis</div></div>
+<div><div style="font-size:20pt;font-weight:900;color:#F59E0B">${esc(state.company.name)}</div><div style="font-size:8pt;color:#6B7280">${esc(state.company.line)}${state.company.contact?"<br>"+esc(state.company.contact):""}</div></div>
 <div style="text-align:right;font-size:9pt"><strong>SERVISNÍ PROTOKOL</strong><br>Datum: ${esc(f.serviceDate)}<br>Technik: ${esc(f.techName)||"—"}</div></div>
 <h2>Zákazník</h2><table><tr><td>Jméno</td><td colspan="3">${esc(f.clientName)||"—"}</td></tr><tr><td>Adresa</td><td colspan="3">${esc(f.clientAddress)||"—"}</td></tr><tr><td>Tel</td><td>${esc(f.clientPhone)||"—"}</td><td>Email</td><td>${esc(f.clientEmail)||"—"}</td></tr><tr><td>Místo</td><td colspan="3">${esc(f.location)||"—"}</td></tr></table>
 <h2>Zařízení</h2><table><tr><td>Výrobce</td><td>${esc(f.manufacturer)||"—"}</td><td>Model</td><td>${esc(f.model)||"—"}</td></tr><tr><td>S/N</td><td>${esc(f.sn)||"—"}</td><td>Servis</td><td>${esc(f.serviceType)||"—"}</td></tr><tr><td>Chladivo</td><td>${esc(f.refrigerant)||"—"}</td><td colspan="2">${ri?ri.type+" | GWP:"+ri.gwp+" | "+ri.safety:""}</td></tr></table>
@@ -1023,7 +1029,7 @@ table{width:100%;border-collapse:collapse;margin:6px 0}td{padding:5px 8px;border
 ${f.parts?"<h2>Materiál</h2><div class='box'>"+esc(f.parts)+"</div>":""}
 ${f.hours?"<div style='background:#FEF3C7;border:1px solid #F59E0B;border-radius:5px;padding:8px;margin:8px 0;font-size:9pt'>Čas: <strong>"+esc(f.hours)+" h</strong></div>":""}
 <div class="footer"><div class="sig"><div class="sig-line"></div><span>Technik</span><br><strong>${esc(f.techName)||""}</strong></div><div class="sig"><div class="sig-line"></div><span>Zákazník</span><br><strong>${esc(f.clientName)||""}</strong></div></div>
-<div style="text-align:center;margin-top:20px;font-size:7pt;color:#999">INNTEO Sulas s.r.o. • ${new Date().toLocaleString("cs-CZ")}</div></body></html>`;
+<div style="text-align:center;margin-top:20px;font-size:7pt;color:#999">${esc(state.company.name)} • ${new Date().toLocaleString("cs-CZ")}</div></body></html>`;
   saveFile('servisni-protokol-'+safeName(f.clientName)+'-'+f.serviceDate+'.html',html,'text/html')
     .then(ok=>{if(ok&&!IS_NATIVE&&!IS_IOS)toast('📄 Protokol stažen – otevřete ho a vytiskněte / uložte jako PDF (Ctrl+P).');})
     .catch(e=>{
@@ -1187,7 +1193,7 @@ function renderPT(c){
 // ── F-GAS LOG ──────────────────────────────────────────────
 function renderFgas(c){
   c.append(h("h2",{className:"sec"},"📗 F-Gas evidenční list"));
-  c.append(h("div",{style:{fontSize:"11px",color:"var(--dim)",marginBottom:"14px"}},"Dle EU 517/2014 – povinná evidence. Data se ukládají v prohlížeči."));
+  c.append(h("div",{style:{fontSize:"11px",color:"var(--dim)",marginBottom:"14px"}},"Dle nařízení (EU) 2024/573 (dříve 517/2014) – povinná evidence. Data se ukládají pouze v zařízení."));
   const fg=state.fgForm;
   const cd=h("div",{className:"card"});
   const g=h("div",{className:"grid3"});
@@ -1228,7 +1234,7 @@ Př: 8kg R410A = 8×2088 = 16704 kg CO₂e → 1×/rok</div>`;
 // ── CLIENTS DB ─────────────────────────────────────────────
 function renderClients(c){
   c.append(h("h2",{className:"sec"},"👥 Zákaznická databáze"));
-  c.append(h("div",{style:{fontSize:"11px",color:"var(--dim)",marginBottom:"14px"}},"Data se ukládají lokálně v prohlížeči."));
+  c.append(h("div",{style:{fontSize:"11px",color:"var(--dim)",marginBottom:"14px"}},"Data se ukládají pouze v zařízení."));
   
   const cd=h("div",{className:"card"});
   cd.append(h("div",{className:"card-title"},"Nový klient"));
@@ -1420,12 +1426,24 @@ function renderData(c){
     state.fgEntries.length?h("button",{className:"btn btn-ghost btn-sm",onClick:exportFgasCsv},"📗 F-Gas CSV"):null));
   c.append(bk);
 
+  const co=state.company;
+  const cc=h("div",{className:"card"});
+  cc.append(h("div",{className:"card-title"},"🏢 Firma na protokolu"));
+  const cg=h("div",{className:"grid2"});
+  cg.append(field("Název firmy","name",co));
+  cg.append(field("Podtitul","line",co));
+  cg.append(field("Kontakt (IČO, tel., e-mail, web)","contact",co,"text","IČO 12345678 • +420 …","1/3"));
+  cc.append(cg);
+  cc.append(h("button",{className:"btn btn-ghost btn-sm",onClick:()=>{store("innteo_company",co);toast("✅ Uloženo");}},"💾 Uložit"));
+  c.append(cc);
+
   const ab=h("div",{className:"card"});
   ab.append(h("div",{className:"card-title"},"ℹ️ O aplikaci"));
   ab.append(h("div",{style:{fontSize:"12px",color:"var(--dim)",lineHeight:"1.8"}},
     h("div",null,"INNTEO Sulas s.r.o. – HVAC • MaR • Servis"),
-    h("div",null,"Verze ",h("strong",{style:{color:"var(--text)"}},APP_VERSION)," • ",IS_NATIVE?"Android aplikace":(window.matchMedia("(display-mode: standalone)").matches?"Nainstalovaná PWA":"Webová verze")),
-    h("div",null,navigator.onLine?"🟢 Online":"🟠 Offline – aplikace funguje i bez připojení")));
+    h("div",null,"Verze ",h("strong",{style:{color:"var(--text)"}},APP_VERSION)," • ",PLATFORM==="ios"?"iOS aplikace":PLATFORM==="android"?"Android aplikace":(window.matchMedia("(display-mode: standalone)").matches?"Nainstalovaná PWA":"Webová verze")),
+    h("div",null,navigator.onLine?"🟢 Online":"🟠 Offline – aplikace funguje i bez připojení"),
+    h("div",null,"🔒 Žádná data se neodesílají – vše zůstává v zařízení. ",h("a",{href:"https://lukassulas-cmyk.github.io/innteo-app1/www/privacy.html",target:"_blank",rel:"noopener",style:{color:"var(--accent)"}},"Ochrana soukromí"))));
   if(!IS_NATIVE&&"serviceWorker" in navigator)ab.append(h("button",{className:"btn btn-ghost btn-sm",style:{marginTop:"10px"},onClick:()=>{
     navigator.serviceWorker.getRegistration().then(r=>{if(!r)return toast("Offline režim není aktivní");r.update().then(()=>toast(r.installing||r.waiting?"⬇️ Stahuji novou verzi…":"✅ Máte aktuální verzi"));});
   }},"🔄 Zkontrolovat aktualizace"));
@@ -1464,6 +1482,11 @@ if (!IS_NATIVE && 'serviceWorker' in navigator && location.protocol !== 'file:')
   navigator.serviceWorker.addEventListener('controllerchange', function() {
     if (reloading) return; reloading = true; location.reload();
   });
+}
+// Nativní aplikace: světlý text stavového řádku na tmavém pozadí
+if (IS_NATIVE && window.Capacitor.Plugins.StatusBar) {
+  window.Capacitor.Plugins.StatusBar.setStyle({style:'DARK'}).catch(function(){});
+  if (PLATFORM === 'android') window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:'#0A0E17'}).catch(function(){});
 }
 // Požádat prohlížeč, aby data aplikace nemazal
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function(){});

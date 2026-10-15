@@ -12,13 +12,15 @@
     "android:open": "cap open android"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3",
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
     "@capacitor/filesystem": "^7.1.4",
-    "@capacitor/share": "^7.0.2"
+    "@capacitor/ios": "^7.6.9",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.6"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.4.3"
+    "@capacitor/cli": "^7.6.9"
   }
 }
