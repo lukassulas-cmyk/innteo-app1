@@ -2,17 +2,25 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="INNTEO Sulas – terénní nástroj servisního technika HVAC a MaR.">
+<meta name="application-name" content="INNTEO">
+<meta name="apple-mobile-web-app-title" content="INNTEO">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0A0E17">
 <title>INNTEO Sulas – HVAC/MaR Field Tool</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0A0E17;--card:#111827;--accent:#F59E0B;--accentDk:#D97706;--green:#10B981;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;--text:#F3F4F6;--dim:#9CA3AF;--muted:#6B7280;--border:#1F2937;--inp:#0D1117}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
-.app{max-width:880px;margin:0 auto;padding:12px 14px 90px}
+.app{max-width:880px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(90px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);color:var(--text);padding:10px 16px;border-radius:8px;font-size:12px;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92vw}
 .header{display:flex;align-items:center;gap:10px;padding:6px 0 14px}
 .logo-box{width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accentDk));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000}
 .logo-text{font-size:16px;font-weight:800;letter-spacing:-0.5px}
@@ -78,10 +86,35 @@ table.data-table td{padding:6px 10px;border-bottom:1px solid var(--border)}
 
 <script>
 // ════════════════════════════════════════════════════════════
-// INNTEO Sulas – HVAC / MaR Field Tool v3.0
-// Standalone HTML – uložit a otevřít v prohlížeči
-// Na mobilu: Safari → Sdílet → Přidat na plochu
+// INNTEO Sulas – HVAC / MaR Field Tool v4.0
+// PWA (web) + Android aplikace (Capacitor) – viz README.md
 // ════════════════════════════════════════════════════════════
+
+const APP_VERSION="4.0.0";
+const TABS=["protocol","checklist","errors","diag","calc","pt","fgas","clients","mar","codesys","cheat","ref","data"];
+const IS_NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+
+// Bezpečné čtení z localStorage (poškozená data nesmí shodit aplikaci)
+function load(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def}catch(e){return def}}
+function store(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){toast("⚠️ Nelze uložit data: "+e.message)}}
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function today(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().split("T")[0]}
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),3200)}
+
+// Uložení souboru: v Android aplikaci přes systémové sdílení, na webu stažením
+async function saveFile(name,content,mime){
+  if(IS_NATIVE&&window.Capacitor.Plugins.Filesystem&&window.Capacitor.Plugins.Share){
+    const{Filesystem,Share}=window.Capacitor.Plugins;
+    const r=await Filesystem.writeFile({path:name,data:content,directory:"CACHE",encoding:"utf8"});
+    await Share.share({title:name,url:r.uri,dialogTitle:"Uložit / odeslat soubor"});
+    return;
+  }
+  const blob=new Blob([content],{type:mime+";charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function safeName(s){return String(s||"INNTEO").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_")}
 
 // ── DATA ───────────────────────────────────────────────────
 
@@ -732,10 +765,11 @@ R17:{r:true,t:"ℹ️ Kondenzát z ODU je normální v topném režimu (defrost)
 };
 
 // ── STATE ──────────────────────────────────────────────────
+const startTab=new URLSearchParams(location.search).get("tab");
 let state={
-  tab:"protocol",
+  tab:TABS.includes(startTab)?startTab:(TABS.includes(load("innteo_tab"))?load("innteo_tab"):"protocol"),
   // Protocol
-  pf:{clientName:"",clientAddress:"",clientPhone:"",clientEmail:"",serviceDate:new Date().toISOString().split("T")[0],techName:"",serviceType:"",refrigerant:"",manufacturer:"",model:"",sn:"",location:"",hp:"",lp:"",sh:"",sc:"",supT:"",retT:"",ambT:"",work:"",findings:"",recs:"",parts:"",hours:""},
+  pf:{clientName:"",clientAddress:"",clientPhone:"",clientEmail:"",serviceDate:today(),techName:"",serviceType:"",refrigerant:"",manufacturer:"",model:"",sn:"",location:"",hp:"",lp:"",sh:"",sc:"",supT:"",retT:"",ambT:"",work:"",findings:"",recs:"",parts:"",hours:""},
   // Checklist
   clSel:"",clChk:[],
   // Error codes
@@ -747,10 +781,12 @@ let state={
   // PT
   ptRef:"R410A",
   // F-Gas
-  fgEntries:JSON.parse(localStorage.getItem("innteo_fgas")||"[]"),
-  fgForm:{date:new Date().toISOString().split("T")[0],action:"check",ref:"R410A",qty:"",tech:"",equip:"",sn:""},
+  fgEntries:load("innteo_fgas",[]),
+  fgForm:{date:today(),action:"check",ref:"R410A",qty:"",tech:"",equip:"",sn:""},
   // Clients DB
-  clients:JSON.parse(localStorage.getItem("innteo_clients")||"[]"),
+  clients:load("innteo_clients",[]),
+  // Archiv protokolů
+  protocols:load("innteo_protocols",[]),
   clientForm:{name:"",address:"",phone:"",email:"",notes:""},
   clientSearch:"",
   // MaR veličiny
@@ -761,8 +797,16 @@ let state={
   csExp:null,
 };
 
-function saveClients(){localStorage.setItem("innteo_clients",JSON.stringify(state.clients))}
-function saveFgas(){localStorage.setItem("innteo_fgas",JSON.stringify(state.fgEntries))}
+// Rozpracovaný protokol přežije zavření aplikace
+Object.assign(state.pf,load("innteo_pf_draft",{}));
+if(!state.pf.serviceDate)state.pf.serviceDate=today();
+if(state.pf.techName===""&&load("innteo_tech",""))state.pf.techName=load("innteo_tech","");
+
+function saveClients(){store("innteo_clients",state.clients)}
+function saveFgas(){store("innteo_fgas",state.fgEntries)}
+function saveProtocols(){store("innteo_protocols",state.protocols)}
+let draftTimer=null;
+document.addEventListener("input",()=>{clearTimeout(draftTimer);draftTimer=setTimeout(()=>store("innteo_pf_draft",state.pf),400)});
 
 // ── RENDER ENGINE ──────────────────────────────────────────
 function h(tag,attrs,...children){
@@ -785,7 +829,7 @@ function render(){
   // Header
   app.append(h("div",{className:"header"},
     h("div",{className:"logo-box"},"IS"),
-    h("div",null,h("div",{className:"logo-text"},"INNTEO Sulas"),h("div",{className:"logo-sub"},"HVAC • MaR Field Tool v3"))
+    h("div",null,h("div",{className:"logo-text"},"INNTEO Sulas"),h("div",{className:"logo-sub"},"HVAC • MaR Field Tool v"+APP_VERSION))
   ));
   
   // Tabs
@@ -794,10 +838,11 @@ function render(){
     {id:"diag",l:"🔍 Diagn."},{id:"calc",l:"🔢 Kalkulačky"},{id:"pt",l:"🌡️ P-T"},
     {id:"fgas",l:"📗 F-Gas"},{id:"clients",l:"👥 Klienti"},{id:"mar",l:"📐 Veličiny"},
     {id:"codesys",l:"💻 CODESYS"},{id:"cheat",l:"📖 MaR Cheat"},{id:"ref",l:"🧊 Chladiva"},
+    {id:"data",l:"⚙️ Data"},
   ];
   const tabBar=h("div",{className:"tabs"});
   tabs.forEach(t=>{
-    const btn=h("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;render();}},t.l);
+    const btn=h("button",{className:"tab"+(state.tab===t.id?" active":""),onClick:()=>{state.tab=t.id;store("innteo_tab",t.id);render();window.scrollTo(0,0);}},t.l);
     tabBar.append(btn);
   });
   app.append(tabBar);
@@ -819,6 +864,7 @@ function render(){
     case"codesys":renderCodesys(content);break;
     case"cheat":renderCheat(content);break;
     case"ref":renderRef(content);break;
+    case"data":renderData(content);break;
   }
   app.append(content);
 }
@@ -916,9 +962,34 @@ function renderProtocol(c){
   
   // Print button
   const btns=h("div",{style:{display:"flex",gap:"10px",flexWrap:"wrap"}});
-  btns.append(h("button",{className:"btn btn-primary",onClick:()=>printProtocol(f,ri)},"🖨️ Tisk / PDF"));
-  btns.append(h("button",{className:"btn btn-sm btn-ghost",onClick:()=>{Object.keys(f).forEach(k=>f[k]=k==="serviceDate"?new Date().toISOString().split("T")[0]:"");render();}},"🗑️ Vymazat"));
+  btns.append(h("button",{className:"btn btn-primary",onClick:()=>{archiveProtocol(f);printProtocol(f,ri);}},"🖨️ Tisk / PDF"));
+  btns.append(h("button",{className:"btn btn-ghost",onClick:()=>{archiveProtocol(f);toast("✅ Protokol uložen do archivu");render();}},"💾 Uložit"));
+  btns.append(h("button",{className:"btn btn-sm btn-ghost",onClick:()=>{if(!confirm("Vymazat formulář?"))return;Object.keys(f).forEach(k=>f[k]="");f.serviceDate=today();f.techName=load("innteo_tech","");store("innteo_pf_draft",f);render();}},"🗑️ Nový / vymazat"));
   c.append(btns);
+
+  // Archiv
+  if(state.protocols.length){
+    const ar=h("div",{className:"card",style:{marginTop:"16px"}});
+    ar.append(h("div",{className:"card-title"},"🗂️ Archiv protokolů ("+state.protocols.length+")"));
+    state.protocols.slice().reverse().slice(0,30).forEach(p=>{
+      ar.append(h("div",{style:{display:"flex",gap:"8px",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--border)",fontSize:"12px"}},
+        h("div",{style:{flex:"1"}},h("strong",null,p.clientName||"—")," ",h("span",{style:{color:"var(--dim)"}},p.serviceDate+" • "+(p.manufacturer||"")+" "+(p.model||""))),
+        h("button",{className:"btn btn-sm btn-ghost",onClick:()=>{Object.assign(f,p);delete f.id;store("innteo_pf_draft",f);render();window.scrollTo(0,0);}},"Otevřít"),
+        h("button",{className:"btn btn-sm btn-danger",onClick:()=>{if(!confirm("Smazat protokol?"))return;state.protocols=state.protocols.filter(x=>x.id!==p.id);saveProtocols();render();}},"✕")
+      ));
+    });
+    c.append(ar);
+  }
+}
+
+function archiveProtocol(f){
+  if(f.techName)store("innteo_tech",f.techName);
+  // Stejný klient + datum + S/N = přepsat existující záznam
+  const key=p=>[p.clientName,p.serviceDate,p.sn].join("|");
+  const i=state.protocols.findIndex(p=>key(p)===key(f));
+  const rec={...f,id:i>=0?state.protocols[i].id:Date.now()};
+  if(i>=0)state.protocols[i]=rec;else state.protocols.push(rec);
+  saveProtocols();
 }
 
 function printProtocol(f,ri){
@@ -932,35 +1003,23 @@ table{width:100%;border-collapse:collapse;margin:6px 0}td{padding:5px 8px;border
 .sig span{font-size:8pt;color:#6B7280}</style></head><body>
 <div style="display:flex;justify-content:space-between;margin-bottom:16px">
 <div><div style="font-size:20pt;font-weight:900;color:#F59E0B">INNTEO Sulas <span style="color:#6B7280;font-size:10pt;font-weight:400">s.r.o.</span></div><div style="font-size:8pt;color:#6B7280">HVAC • MaR • Servis</div></div>
-<div style="text-align:right;font-size:9pt"><strong>SERVISNÍ PROTOKOL</strong><br>Datum: ${f.serviceDate}<br>Technik: ${f.techName||"—"}</div></div>
-<h2>Zákazník</h2><table><tr><td>Jméno</td><td colspan="3">${f.clientName||"—"}</td></tr><tr><td>Adresa</td><td colspan="3">${f.clientAddress||"—"}</td></tr><tr><td>Tel</td><td>${f.clientPhone||"—"}</td><td>Email</td><td>${f.clientEmail||"—"}</td></tr><tr><td>Místo</td><td colspan="3">${f.location||"—"}</td></tr></table>
-<h2>Zařízení</h2><table><tr><td>Výrobce</td><td>${f.manufacturer||"—"}</td><td>Model</td><td>${f.model||"—"}</td></tr><tr><td>S/N</td><td>${f.sn||"—"}</td><td>Servis</td><td>${f.serviceType||"—"}</td></tr><tr><td>Chladivo</td><td>${f.refrigerant||"—"}</td><td colspan="2">${ri?ri.type+" | GWP:"+ri.gwp+" | "+ri.safety:""}</td></tr></table>
-<h2>Měření</h2><table><tr><td>HP</td><td>${f.hp||"—"} bar</td><td>LP</td><td>${f.lp||"—"} bar</td></tr><tr><td>SH</td><td>${f.sh||"—"} K</td><td>SC</td><td>${f.sc||"—"} K</td></tr><tr><td>Přívod</td><td>${f.supT||"—"} °C</td><td>Zpátečka</td><td>${f.retT||"—"} °C</td></tr><tr><td>Venkovní</td><td>${f.ambT||"—"} °C</td><td></td><td></td></tr></table>
-<h2>Provedené práce</h2><div class="box">${f.work||"—"}</div>
-<h2>Závady</h2><div class="box">${f.findings||"—"}</div>
-<h2>Doporučení</h2><div class="box">${f.recs||"—"}</div>
-${f.parts?"<h2>Materiál</h2><div class='box'>"+f.parts+"</div>":""}
-${f.hours?"<div style='background:#FEF3C7;border:1px solid #F59E0B;border-radius:5px;padding:8px;margin:8px 0;font-size:9pt'>Čas: <strong>"+f.hours+" h</strong></div>":""}
-<div class="footer"><div class="sig"><div class="sig-line"></div><span>Technik</span><br><strong>${f.techName||""}</strong></div><div class="sig"><div class="sig-line"></div><span>Zákazník</span><br><strong>${f.clientName||""}</strong></div></div>
+<div style="text-align:right;font-size:9pt"><strong>SERVISNÍ PROTOKOL</strong><br>Datum: ${esc(f.serviceDate)}<br>Technik: ${esc(f.techName)||"—"}</div></div>
+<h2>Zákazník</h2><table><tr><td>Jméno</td><td colspan="3">${esc(f.clientName)||"—"}</td></tr><tr><td>Adresa</td><td colspan="3">${esc(f.clientAddress)||"—"}</td></tr><tr><td>Tel</td><td>${esc(f.clientPhone)||"—"}</td><td>Email</td><td>${esc(f.clientEmail)||"—"}</td></tr><tr><td>Místo</td><td colspan="3">${esc(f.location)||"—"}</td></tr></table>
+<h2>Zařízení</h2><table><tr><td>Výrobce</td><td>${esc(f.manufacturer)||"—"}</td><td>Model</td><td>${esc(f.model)||"—"}</td></tr><tr><td>S/N</td><td>${esc(f.sn)||"—"}</td><td>Servis</td><td>${esc(f.serviceType)||"—"}</td></tr><tr><td>Chladivo</td><td>${esc(f.refrigerant)||"—"}</td><td colspan="2">${ri?ri.type+" | GWP:"+ri.gwp+" | "+ri.safety:""}</td></tr></table>
+<h2>Měření</h2><table><tr><td>HP</td><td>${esc(f.hp)||"—"} bar</td><td>LP</td><td>${esc(f.lp)||"—"} bar</td></tr><tr><td>SH</td><td>${esc(f.sh)||"—"} K</td><td>SC</td><td>${esc(f.sc)||"—"} K</td></tr><tr><td>Přívod</td><td>${esc(f.supT)||"—"} °C</td><td>Zpátečka</td><td>${esc(f.retT)||"—"} °C</td></tr><tr><td>Venkovní</td><td>${esc(f.ambT)||"—"} °C</td><td></td><td></td></tr></table>
+<h2>Provedené práce</h2><div class="box">${esc(f.work)||"—"}</div>
+<h2>Závady</h2><div class="box">${esc(f.findings)||"—"}</div>
+<h2>Doporučení</h2><div class="box">${esc(f.recs)||"—"}</div>
+${f.parts?"<h2>Materiál</h2><div class='box'>"+esc(f.parts)+"</div>":""}
+${f.hours?"<div style='background:#FEF3C7;border:1px solid #F59E0B;border-radius:5px;padding:8px;margin:8px 0;font-size:9pt'>Čas: <strong>"+esc(f.hours)+" h</strong></div>":""}
+<div class="footer"><div class="sig"><div class="sig-line"></div><span>Technik</span><br><strong>${esc(f.techName)||""}</strong></div><div class="sig"><div class="sig-line"></div><span>Zákazník</span><br><strong>${esc(f.clientName)||""}</strong></div></div>
 <div style="text-align:center;margin-top:20px;font-size:7pt;color:#999">INNTEO Sulas s.r.o. • ${new Date().toLocaleString("cs-CZ")}</div></body></html>`;
-  // Method 1: Try Blob download as HTML (can open & print from browser)
-  try {
-    var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'servisni-protokol-' + (f.clientName||'INNTEO').replace(/[^a-zA-Z0-9]/g,'_') + '-' + f.serviceDate + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert('Protokol stažen! Otevřete soubor v prohlížeči a vytiskněte (Ctrl+P) nebo "Uložit jako PDF".');
-  } catch(e) {
-    // Fallback: try window.open
-    try {
-      var w=window.open("","_blank");w.document.write(html);w.document.close();setTimeout(function(){w.print();},500);
-    } catch(e2) { alert('Chyba při tisku: ' + e2.message); }
-  }
+  saveFile('servisni-protokol-'+safeName(f.clientName)+'-'+f.serviceDate+'.html',html,'text/html')
+    .then(()=>{if(!IS_NATIVE)toast('📄 Protokol stažen – otevřete ho a vytiskněte / uložte jako PDF (Ctrl+P).');})
+    .catch(e=>{
+      try{const w=window.open("","_blank");w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);}
+      catch(e2){alert('Chyba při tisku: '+e2.message);}
+    });
 }
 
 // ── CHECKLISTS ─────────────────────────────────────────────
@@ -1134,14 +1193,16 @@ function renderFgas(c){
   
   if(state.fgEntries.length){
     const tbl=h("table",{className:"data-table"});
-    const thead=h("thead");thead.append(h("tr",null,...["Datum","Úkon","Chlad.","kg","Zařízení","Tech."].map(t=>h("th",null,t))));tbl.append(thead);
+    const thead=h("thead");thead.append(h("tr",null,...["Datum","Úkon","Chlad.","kg","Zařízení","Tech.",""].map(t=>h("th",null,t))));tbl.append(thead);
     const tbody=h("tbody");
     const actionMap={check:"Kontrola",add:"Doplnění",recover:"Odsátí",install:"Nová náplň",decommission:"Vyřazení"};
     state.fgEntries.forEach(e=>{
-      const tr=h("tr",null,h("td",null,e.date),h("td",{style:{color:e.action==="add"?"var(--green)":e.action==="recover"?"var(--red)":"var(--text)"}},actionMap[e.action]||e.action),h("td",{style:{fontFamily:"monospace",fontWeight:700}},e.ref),h("td",{style:{fontFamily:"monospace"}},e.qty||"—"),h("td",{style:{color:"var(--dim)"}},e.equip),h("td",{style:{color:"var(--dim)"}},e.tech));
+      const tr=h("tr",null,h("td",null,e.date),h("td",{style:{color:e.action==="add"?"var(--green)":e.action==="recover"?"var(--red)":"var(--text)"}},actionMap[e.action]||e.action),h("td",{style:{fontFamily:"monospace",fontWeight:700}},e.ref),h("td",{style:{fontFamily:"monospace"}},e.qty||"—"),h("td",{style:{color:"var(--dim)"}},e.equip),h("td",{style:{color:"var(--dim)"}},e.tech),
+        h("td",null,h("button",{className:"btn btn-sm btn-danger",style:{padding:"2px 7px",fontSize:"10px"},onClick:()=>{if(!confirm("Smazat záznam?"))return;state.fgEntries=state.fgEntries.filter(x=>x.id!==e.id);saveFgas();render();}},"✕")));
       tbody.append(tr);
     });
-    tbl.append(tbody);c.append(tbl);
+    tbl.append(tbody);c.append(h("div",{style:{overflowX:"auto"}},tbl));
+    c.append(h("button",{className:"btn btn-sm btn-ghost",style:{marginTop:"10px"},onClick:exportFgasCsv},"⬇️ Export CSV (Excel)"));
   }
   
   // Info box
@@ -1287,12 +1348,115 @@ function renderRef(c){
   tbl.append(tbody);c.append(tbl);
 }
 
+// ── DATA / ZÁLOHA ──────────────────────────────────────────
+const BACKUP_KEYS={clients:"innteo_clients",fgEntries:"innteo_fgas",protocols:"innteo_protocols"};
+
+function exportFgasCsv(){
+  const actionMap={check:"Kontrola těsnosti",add:"Doplnění",recover:"Odsátí",install:"Nová náplň",decommission:"Vyřazení"};
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const rows=[["Datum","Úkon","Chladivo","GWP","Množství kg","t CO2e","Zařízení","S/N","Technik"]];
+  state.fgEntries.forEach(e=>{
+    const r=REFRIGERANTS.find(x=>x.code===e.ref);const kg=parseFloat(e.qty)||0;
+    rows.push([e.date,actionMap[e.action]||e.action,e.ref,r?r.gwp:"",String(kg).replace(".",","),r?(kg*r.gwp/1000).toFixed(2).replace(".",","):"",e.equip,e.sn||"",e.tech]);
+  });
+  // BOM + středník = Excel v české lokalizaci otevře správně
+  saveFile("fgas-evidence-"+today()+".csv","\ufeff"+rows.map(r=>r.map(q).join(";")).join("\r\n"),"text/csv").catch(e=>alert(e.message));
+}
+
+function exportBackup(){
+  const data={app:"innteo-field-tool",version:APP_VERSION,exported:new Date().toISOString()};
+  Object.keys(BACKUP_KEYS).forEach(k=>data[k]=state[k]);
+  saveFile("innteo-zaloha-"+today()+".json",JSON.stringify(data,null,2),"application/json")
+    .then(()=>{store("innteo_last_backup",new Date().toISOString());render();})
+    .catch(e=>alert(e.message));
+}
+
+function importBackup(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let data;
+    try{data=JSON.parse(rd.result)}catch(e){return alert("Soubor není platná záloha (JSON).")}
+    if(!data||data.app!=="innteo-field-tool")return alert("Soubor není záloha INNTEO.");
+    const merge=confirm("OK = sloučit se stávajícími daty\nZrušit = nahradit stávající data zálohou");
+    Object.keys(BACKUP_KEYS).forEach(k=>{
+      if(!Array.isArray(data[k]))return;
+      if(merge){const ids=new Set(state[k].map(x=>x.id));state[k]=state[k].concat(data[k].filter(x=>!ids.has(x.id)));}
+      else state[k]=data[k];
+      store(BACKUP_KEYS[k],state[k]);
+    });
+    toast("✅ Záloha obnovena");render();
+  };
+  rd.readAsText(file);
+}
+
+function renderData(c){
+  c.append(h("h2",{className:"sec"},"⚙️ Data a aplikace"));
+  const stat=(l,v)=>h("div",{style:{flex:"1",minWidth:"90px",background:"var(--inp)",border:"1px solid var(--border)",borderRadius:"8px",padding:"10px",textAlign:"center"}},
+    h("div",{style:{fontSize:"22px",fontWeight:800,fontFamily:"monospace",color:"var(--accent)"}},v),h("div",{style:{fontSize:"10px",color:"var(--dim)",textTransform:"uppercase",letterSpacing:"1px"}},l));
+  c.append(h("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"14px"}},
+    stat("Protokoly",state.protocols.length),stat("Klienti",state.clients.length),stat("F-Gas záznamy",state.fgEntries.length)));
+
+  const last=load("innteo_last_backup",null);
+  const bk=h("div",{className:"card"});
+  bk.append(h("div",{className:"card-title"},"💾 Záloha dat"));
+  bk.append(h("div",{style:{fontSize:"12px",color:"var(--dim)",marginBottom:"10px",lineHeight:"1.6"}},
+    "Všechna data jsou uložena pouze v tomto zařízení. Pravidelně je zálohujte – při smazání dat prohlížeče nebo výměně telefonu by se jinak ztratila. ",
+    h("span",{style:{color:last?"var(--green)":"var(--red)"}},last?"Poslední záloha: "+new Date(last).toLocaleString("cs-CZ"):"Zatím nezálohováno.")));
+  const fileInp=h("input",{type:"file",accept:"application/json,.json",style:{display:"none"},onChange:e=>{if(e.target.files[0])importBackup(e.target.files[0]);e.target.value="";}});
+  bk.append(fileInp);
+  bk.append(h("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap"}},
+    h("button",{className:"btn btn-primary btn-sm",onClick:exportBackup},"⬇️ Zálohovat"),
+    h("button",{className:"btn btn-ghost btn-sm",onClick:()=>fileInp.click()},"⬆️ Obnovit ze zálohy"),
+    state.fgEntries.length?h("button",{className:"btn btn-ghost btn-sm",onClick:exportFgasCsv},"📗 F-Gas CSV"):null));
+  c.append(bk);
+
+  const ab=h("div",{className:"card"});
+  ab.append(h("div",{className:"card-title"},"ℹ️ O aplikaci"));
+  ab.append(h("div",{style:{fontSize:"12px",color:"var(--dim)",lineHeight:"1.8"}},
+    h("div",null,"INNTEO Sulas s.r.o. – HVAC • MaR • Servis"),
+    h("div",null,"Verze ",h("strong",{style:{color:"var(--text)"}},APP_VERSION)," • ",IS_NATIVE?"Android aplikace":(window.matchMedia("(display-mode: standalone)").matches?"Nainstalovaná PWA":"Webová verze")),
+    h("div",null,navigator.onLine?"🟢 Online":"🟠 Offline – aplikace funguje i bez připojení")));
+  if(!IS_NATIVE&&"serviceWorker" in navigator)ab.append(h("button",{className:"btn btn-ghost btn-sm",style:{marginTop:"10px"},onClick:()=>{
+    navigator.serviceWorker.getRegistration().then(r=>{if(!r)return toast("Offline režim není aktivní");r.update().then(()=>toast(r.installing||r.waiting?"⬇️ Stahuji novou verzi…":"✅ Máte aktuální verzi"));});
+  }},"🔄 Zkontrolovat aktualizace"));
+  c.append(ab);
+
+  const dz=h("div",{className:"card",style:{borderColor:"rgba(239,68,68,.3)"}});
+  dz.append(h("div",{className:"card-title",style:{color:"var(--red)"}},"⚠️ Smazat všechna data"));
+  dz.append(h("button",{className:"btn btn-danger btn-sm",onClick:()=>{
+    if(!confirm("Opravdu smazat VŠECHNY protokoly, klienty a F-Gas záznamy? Tuto akci nelze vrátit."))return;
+    Object.keys(BACKUP_KEYS).forEach(k=>{state[k]=[];store(BACKUP_KEYS[k],[]);});
+    toast("Data smazána");render();
+  }},"Smazat vše"));
+  c.append(dz);
+}
+
 // ── INIT ───────────────────────────────────────────────────
 
 // Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(e) { console.log('SW skip:', e); });
+// V Android aplikaci jsou soubory přímo v balíčku – service worker není potřeba.
+if (!IS_NATIVE && 'serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+    function offerUpdate(w) {
+      if (!navigator.serviceWorker.controller) return; // první instalace
+      const bar = h("div", {className:"toast", style:{display:"flex",gap:"10px",alignItems:"center"}},
+        "🆕 Je dostupná nová verze",
+        h("button", {className:"btn btn-primary btn-sm", onClick:function(){ w.postMessage('SKIP_WAITING'); }}, "Aktualizovat"));
+      document.body.append(bar);
+    }
+    if (reg.waiting) offerUpdate(reg.waiting);
+    reg.addEventListener('updatefound', function() {
+      const w = reg.installing;
+      w.addEventListener('statechange', function() { if (w.state === 'installed') offerUpdate(w); });
+    });
+  }).catch(function(e) { console.log('SW skip:', e); });
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (reloading) return; reloading = true; location.reload();
+  });
 }
+window.addEventListener('online', function(){ if (state.tab === 'data') render(); });
+window.addEventListener('offline', function(){ toast('🟠 Offline – data se ukládají v zařízení'); });
 
 // PWA Install prompt
 let deferredPrompt = null;
@@ -1304,7 +1468,7 @@ window.addEventListener('beforeinstallprompt', function(e) {
 
 function showInstallBanner(app) {
   // Only show if not already in standalone mode
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+  if (IS_NATIVE || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
   
   const banner = h("div", {style:{background:"linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05))",border:"1px solid rgba(245,158,11,.3)",borderRadius:"10px",padding:"14px",marginBottom:"14px",fontSize:"12px",color:"var(--text)"}});
   

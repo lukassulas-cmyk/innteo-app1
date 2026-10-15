@@ -1,0 +1,29 @@
+{
+  "id": "./",
+  "name": "INNTEO Sulas – HVAC/MaR Field Tool",
+  "short_name": "INNTEO",
+  "description": "Terénní nástroj servisního technika HVAC a MaR: servisní protokoly, checklisty, chybové kódy, diagnostika, kalkulačky, P-T tabulky, F-Gas evidence a klienti.",
+  "lang": "cs",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0A0E17",
+  "theme_color": "#0A0E17",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Servisní protokol", "short_name": "Protokol", "url": "./?tab=protocol", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "F-Gas evidence", "short_name": "F-Gas", "url": "./?tab=fgas", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Kalkulačky", "short_name": "Kalkulačky", "url": "./?tab=calc", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "P-T tabulka", "short_name": "P-T", "url": "./?tab=pt", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
