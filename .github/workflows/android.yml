@@ -28,7 +28,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      # Android SDK je na runnerech GitHubu předinstalovaný ($ANDROID_HOME)
 
       - name: Kontrola webové části
         run: node scripts/check.mjs
