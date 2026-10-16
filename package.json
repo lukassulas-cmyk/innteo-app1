@@ -1,0 +1,26 @@
+{
+  "name": "innteo-field-tool",
+  "version": "4.0.0",
+  "private": true,
+  "description": "INNTEO Sulas – HVAC/MaR Field Tool (PWA + Android)",
+  "scripts": {
+    "serve": "npx --yes http-server www -p 8080 -c-1",
+    "check": "node scripts/check.mjs",
+    "android:add": "cap add android",
+    "android:icons": "capacitor-assets generate --android --iconBackgroundColor '#F59E0B' --iconBackgroundColorDark '#F59E0B' --splashBackgroundColor '#0A0E17' --splashBackgroundColorDark '#0A0E17'",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/ios": "^7.6.9",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.9"
+  }
+}

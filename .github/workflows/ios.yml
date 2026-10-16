@@ -1,0 +1,128 @@
+name: iOS (App Store)
+
+# Sestaví iOS aplikaci na Macu od GitHubu – vlastní Mac není potřeba.
+# Bez Apple secrets: jen kontrolní build pro simulátor (ověří, že se aplikace přeloží).
+# Se secrets (viz store/NAVOD-APP-STORE.md): podepíše a nahraje build do App Store Connect / TestFlight.
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    tags: ['v*']
+    paths: ['www/**', 'resources/**', 'package*.json', 'capacitor.config.json', '.github/workflows/ios.yml']
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Nahrát build do App Store Connect (TestFlight)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      HAS_APPLE: ${{ secrets.APPSTORE_KEY_ID != '' && secrets.APPSTORE_ISSUER_ID != '' && secrets.APPSTORE_KEY_P8 != '' && secrets.APPLE_TEAM_ID != '' }}
+      PROJECT: ios/App/App.xcodeproj
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Kontrola webové části
+        run: node scripts/check.mjs
+
+      - name: Instalace závislostí
+        run: npm ci
+
+      - name: Vygenerování iOS projektu
+        run: |
+          # cap add občas skončí chybou v kroku "pod install" i při SPM – projekt je ale vytvořený, sync to dokončí
+          npx cap add ios --packagemanager SPM || true
+          test -f ios/App/CapApp-SPM/Package.swift
+          npx capacitor-assets generate --ios
+          npx cap sync ios
+
+      - name: Nastavení projektu (verze, iPhone, Info.plist)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          BUILD=$(( ${{ github.run_number }} + 100 ))
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          PBX=$PROJECT/project.pbxproj
+          sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/g" $PBX
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD;/g" $PBX
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' $PBX
+          PL=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDevelopmentRegion cs" $PL
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName INNTEO" $PL
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $PL
+          /usr/libexec/PlistBuddy -c "Delete :UIRequiredDeviceCapabilities" $PL
+          /usr/libexec/PlistBuddy -c "Add :UIRequiredDeviceCapabilities array" $PL
+          /usr/libexec/PlistBuddy -c "Add :UIRequiredDeviceCapabilities:0 string arm64" $PL
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" $PL
+          /usr/libexec/PlistBuddy -c "Add :UIStatusBarStyle string UIStatusBarStyleLightContent" $PL
+          plutil -lint $PL
+          echo "Verze $VERSION ($BUILD)"
+
+      - name: Kontrolní build (simulátor)
+        run: |
+          xcodebuild -project $PROJECT -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build | tail -n 25
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: Apple API klíč
+        if: env.HAS_APPLE == 'true' && (github.event_name != 'workflow_dispatch' || inputs.upload)
+        env:
+          KEY_P8: ${{ secrets.APPSTORE_KEY_P8 }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8
+          echo "KEY_PATH=$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Archiv + podpis + nahrání do App Store Connect
+        if: env.KEY_PATH != ''
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY_PATH -authenticationKeyID $KEY_ID -authenticationKeyIssuerID $ISSUER_ID"
+          xcodebuild -project $PROJECT -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
+            DEVELOPMENT_TEAM=$TEAM_ID CODE_SIGN_STYLE=Automatic \
+            $AUTH archive | tail -n 25
+          test ${PIPESTATUS[0]} -eq 0
+
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath build/App.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist -exportPath build/export \
+            $AUTH | tail -n 25
+          test ${PIPESTATUS[0]} -eq 0
+          echo "✅ Build $VERSION ($BUILD) nahrán do App Store Connect – za 5–30 min se objeví v TestFlight."
+
+      - name: Bez Apple účtu
+        if: env.HAS_APPLE != 'true'
+        run: echo "ℹ️ Kontrolní build prošel. Pro nahrání do App Store přidejte secrets podle store/NAVOD-APP-STORE.md."
