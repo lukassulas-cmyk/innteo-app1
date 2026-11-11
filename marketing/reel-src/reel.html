@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0A0E17;font-family:Inter,sans-serif;color:#fff}
+#stage{position:absolute;inset:0;overflow:hidden}
+.grid{position:absolute;inset:-200px;background-image:linear-gradient(rgba(245,158,11,.06) 2px,transparent 2px),linear-gradient(90deg,rgba(245,158,11,.06) 2px,transparent 2px);background-size:90px 90px}
+.glow{position:absolute;width:1100px;height:1100px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.28),transparent 65%)}
+.scene{position:absolute;inset:0;opacity:0}
+.big{font-weight:900;letter-spacing:-4px;line-height:.95}
+.or{color:#F59E0B}
+.abs{position:absolute}
+.word{position:absolute;left:90px;font-size:200px;font-weight:900;letter-spacing:-6px}
+.bar{position:absolute;height:22px;background:#F59E0B;left:90px}
+.item{position:absolute;left:110px;font-size:78px;font-weight:700;display:flex;align-items:center;gap:34px}
+.dot{width:30px;height:30px;border-radius:50%;background:#F59E0B;flex:none}
+.phone{position:absolute;left:250px;top:620px;width:580px;height:1180px;border-radius:70px;background:#1f2937;padding:18px;box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 3px #374151}
+.screen{width:100%;height:100%;border-radius:54px;overflow:hidden;position:relative;background:#0A0E17}
+.screen img{position:absolute;left:0;width:100%}
+.pill{position:absolute;left:50%;transform:translateX(-50%);background:#F59E0B;color:#0A0E17;font-weight:800;font-size:56px;padding:30px 60px;border-radius:100px;white-space:nowrap}
+</style></head><body>
+<div id="stage">
+  <div class="grid" id="grid"></div>
+  <div class="glow" id="glow"></div>
+
+  <!-- A: hook -->
+  <div class="scene" id="A">
+    <div class="word" id="w1" style="top:520px">TEPLO.</div>
+    <div class="word" id="w2" style="top:740px">CHLAD.</div>
+    <div class="word or" id="w3" style="top:960px">VZDUCH.</div>
+    <div class="bar" id="b1" style="top:1210px;width:0"></div>
+  </div>
+
+  <!-- B: stake -->
+  <div class="scene" id="B">
+    <div class="abs big" id="b1t" style="left:90px;top:700px;font-size:120px">Když nefungují,</div>
+    <div class="abs big or" id="b2t" style="left:90px;top:860px;font-size:120px">všichni to cítí.</div>
+  </div>
+
+  <!-- C: HVAC -->
+  <div class="scene" id="C">
+    <div class="abs big or" id="cT" style="left:90px;top:330px;font-size:260px">HVAC</div>
+    <div class="item" id="c1" style="top:680px"><span class="dot"></span>Klimatizace</div>
+    <div class="item" id="c2" style="top:820px"><span class="dot"></span>Tepelná čerpadla</div>
+    <div class="item" id="c3" style="top:960px"><span class="dot"></span>Vzduchotechnika</div>
+    <div class="item" id="c4" style="top:1100px"><span class="dot"></span>Servis a údržba</div>
+  </div>
+
+  <!-- D: MaR -->
+  <div class="scene" id="D">
+    <div class="abs big or" id="dT" style="left:90px;top:300px;font-size:260px">MaR</div>
+    <div class="abs" id="dS" style="left:96px;top:570px;font-size:64px;font-weight:600;color:#d1d5db">Měření a regulace</div>
+    <svg class="abs" id="chart" style="left:90px;top:720px" width="900" height="520" viewBox="0 0 900 520">
+      <line x1="0" y1="260" x2="900" y2="260" stroke="#6B7280" stroke-width="4" stroke-dasharray="18 14"/>
+      <text x="900" y="240" fill="#9CA3AF" font-size="34" text-anchor="end" font-family="Inter" font-weight="600">žádaná hodnota</text>
+      <path id="curve" d="" fill="none" stroke="#F59E0B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle id="cdot" r="16" fill="#F59E0B"/>
+    </svg>
+    <div class="abs big" id="dNum" style="left:90px;top:1270px;font-size:150px">22,0 °C</div>
+  </div>
+
+  <!-- E/F: app -->
+  <div class="scene" id="E">
+    <div class="abs big" id="eT" style="left:0;right:0;text-align:center;top:300px;font-size:92px">Vlastní servisní app</div>
+    <div class="abs" id="eS" style="left:0;right:0;text-align:center;top:430px;font-size:60px;font-weight:600;color:#F59E0B">Protokol hotový na místě</div>
+    <div class="phone" id="phone"><div class="screen">
+      <img id="s1" src="01-protokol.jpg">
+      <img id="s2" src="05-fgas.jpg" style="opacity:0">
+      <img id="s3" src="06-mar-veliciny.jpg" style="opacity:0">
+    </div></div>
+  </div>
+
+  <!-- G: brand -->
+  <div class="scene" id="G">
+    <img id="logo" src="icon-only.png" class="abs" style="left:330px;top:330px;width:420px;height:420px;border-radius:96px;box-shadow:0 30px 100px rgba(245,158,11,.35)">
+    <div class="abs big" id="gN" style="left:0;right:0;text-align:center;top:820px;font-size:110px">INNTEO Sulas</div>
+    <div class="abs" id="gS" style="left:0;right:0;text-align:center;top:960px;font-size:48px;font-weight:600;color:#9CA3AF;letter-spacing:10px">HVAC · MaR · SERVIS</div>
+    <div class="abs big" id="gL" style="left:0;right:0;text-align:center;top:1080px;font-size:84px">Ať <span class="or">vzduch</span> funguje.</div>
+    <div class="pill" id="gP" style="top:1250px">Napište nám do zpráv →</div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eo=x=>1-Math.pow(1-cl(x),3);           // ease-out cubic
+const eb=x=>{x=cl(x);const c=1.70158;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)}; // back-out
+// p = progress of an "in" anim starting at t0 lasting d
+const p=(t,t0,d=.45)=>cl((t-t0)/d);
+function vis(id,t,a,b,fade=.25){const o=cl((t-a)/fade)*cl((b-t)/fade);$(id).style.opacity=o;return o}
+function up(el,t,t0,dist=120,d=.5){const k=eo(p(t,t0,d));$(el).style.transform=`translateY(${(1-k)*dist}px)`;$(el).style.opacity=k}
+function left(el,t,t0,dist=200,d=.45){const k=eo(p(t,t0,d));$(el).style.transform=`translateX(${-(1-k)*dist}px)`;$(el).style.opacity=k}
+function curvePts(prog){ // damped oscillation settling on setpoint
+  let pts=[];const n=Math.floor(180*prog);
+  for(let i=0;i<=n;i++){const x=i/180*880;const y=260-200*Math.exp(-i/45)*Math.cos(i/11)*(i<4?i/4:1)+ (i<4?200*(1-i/4):0);pts.push([x+10,y])}
+  return pts}
+window.render=function(t){
+  $('grid').style.transform=`translate(${(t*18)%90}px,${(t*30)%90}px)`;
+  $('glow').style.transform=`translate(${-100+Math.sin(t*.6)*250}px,${400+Math.cos(t*.45)*500}px)`;
+  // A 0-2.7
+  vis('A',t,-1,2.75);
+  [['w1',.05],['w2',.55],['w3',1.05]].forEach(([id,s])=>{const k=eb(p(t,s,.5));$(id).style.transform=`translateY(${(1-k)*160}px) scale(${.85+.15*k})`;$(id).style.opacity=cl(p(t,s,.2))});
+  $('b1').style.width=(eo(p(t,1.5,.7))*700)+'px';
+  // B 2.75-5.3
+  vis('B',t,2.75,5.35);up('b1t',t,2.8);up('b2t',t,3.4);
+  // C 5.35-8.7
+  vis('C',t,5.35,8.75);left('cT',t,5.4,300);
+  ['c1','c2','c3','c4'].forEach((id,i)=>left(id,t,5.9+i*.4));
+  // D 8.75-12.3
+  vis('D',t,8.75,12.35);left('dT',t,8.8,300);up('dS',t,9.1,60);
+  const prog=eo(p(t,9.3,2.6)),pts=curvePts(prog);
+  $('curve').setAttribute('d','M'+pts.map(q=>q.join(',')).join(' L'));
+  const last=pts[pts.length-1]||[10,60];$('cdot').setAttribute('cx',last[0]);$('cdot').setAttribute('cy',last[1]);
+  const temp=22+ (260-last[1])/200*4; $('dNum').textContent=temp.toFixed(1).replace('.',',')+' °C';
+  $('dNum').style.opacity=cl(p(t,9.3,.3));
+  // E 12.35-19.6
+  vis('E',t,12.35,19.65);
+  const ph=eo(p(t,12.4,.7));$('phone').style.transform=`translateY(${(1-ph)*900}px) rotate(${(1-ph)*8}deg)`;
+  // screenshot scroll + swaps
+  const sh=s=>$(s);
+  $('s1').style.top=(-eo(p(t,13.3,2.2))*480)+'px';
+  $('s2').style.opacity=cl(p(t,15.4,.3));$('s2').style.top=(-eo(p(t,15.6,1.8))*300)+'px';
+  $('s3').style.opacity=cl(p(t,17.5,.3));$('s3').style.top=(-eo(p(t,17.7,1.8))*300)+'px';
+  const lab=t<15.4?['Vlastní servisní app','Protokol hotový na místě']:t<17.5?['F-Gas evidence','Digitálně. Bez papírů.']:['MaR v kapse','Veličiny, signály, CODESYS'];
+  const segStart=t<15.4?12.6:t<17.5?15.4:17.5;
+  $('eT').textContent=lab[0];$('eS').textContent=lab[1];up('eT',t,segStart,60,.4);up('eS',t,segStart+.15,60,.4);
+  // G 19.65-24
+  vis('G',t,19.65,30);
+  const lk=eb(p(t,19.7,.6));$('logo').style.transform=`scale(${.4+.6*lk}) rotate(${(1-lk)*-12}deg)`;$('logo').style.opacity=cl(p(t,19.7,.2));
+  up('gN',t,20.1,80);up('gS',t,20.35,60);up('gL',t,20.7,60);
+  const pk=eb(p(t,21.2,.5));$('gP').style.transform=`translateX(-50%) scale(${pk*(1+.03*Math.sin(Math.max(0,t-21.7)*6))})`;$('gP').style.opacity=cl(p(t,21.2,.2));
+  // final fade for seamless loop
+  $('stage').style.opacity=cl((24-t)/.35);
+};
+render(0);
+</script></body></html>
