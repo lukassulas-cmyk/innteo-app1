@@ -18,10 +18,17 @@ img,svg{display:block}
   padding:14px clamp(16px,4vw,40px);transition:background .3s,backdrop-filter .3s,border-color .3s;border-bottom:1px solid transparent}
 .topbar.solid{background:rgba(7,10,18,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:var(--line)}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;letter-spacing:.02em}
-.brand-badge{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;font-weight:800;color:#0A0E17;
-  background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 0 24px rgba(245,158,11,.35)}
-.brand-badge.sm{width:26px;height:26px;border-radius:7px;font-size:12px}
-.brand-name b{color:var(--accent)}
+/* logo INNTEO Sulas – červeno-modrý symbol + písmo ve stylu Century Gothic */
+.brand-mark{width:35px;height:36px}
+.brand-mark.sm{width:24px;height:25px}
+.brand-text{display:flex;flex-direction:column;line-height:1.05;font-family:"Didact Gothic","Century Gothic","URW Gothic",sans-serif;letter-spacing:.01em}
+.brand-text b{font-weight:400;font-size:21px;color:var(--text)}
+.brand-text small{font-size:9.5px;letter-spacing:.3em;color:var(--dim);margin-top:4px}
+.foot .brand-text b{font-size:15px}
+.brand-text.big{align-items:center;margin:16px 0 22px}
+.brand-text.big b{font-size:32px}
+.brand-text.big small{font-size:12px;margin-top:8px}
+.loader-logo{width:77px;height:80px}
 .nav{display:flex;gap:6px;align-items:center}
 .nav a{padding:8px 14px;border-radius:999px;color:var(--dim);font-size:14px;font-weight:500;transition:color .2s,background .2s}
 .nav a:hover{color:var(--text);background:rgba(255,255,255,.06)}
