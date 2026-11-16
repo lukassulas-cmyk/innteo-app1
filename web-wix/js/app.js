@@ -6,8 +6,8 @@ const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/thr
    KONTAKT – doplňte a web se sám upraví
    ========================================================= */
 const CONTACT = {
-  email: '',   // např. 'info@vasedomena.cz'
-  phone: '',   // např. '+420 777 123 456'
+  email: 'info@innteo.net',
+  phone: '+420 602 705 240',
 };
 
 /* =========================================================
