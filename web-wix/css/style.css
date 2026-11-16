@@ -56,7 +56,7 @@ body.away .hero-copy{opacity:0;transform:translate(-40px,-58%);pointer-events:no
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:14px}
 .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.35}}
-h1{font-family:var(--display);font-size:clamp(38px,5.2vw,68px);line-height:1.02;letter-spacing:-.025em;font-weight:700}
+h1{font-family:var(--display);font-size:clamp(34px,4.3vw,60px);line-height:1.02;letter-spacing:-.025em;font-weight:700}
 .grad{background:linear-gradient(90deg,#F59E0B 0%,#fb7185 45%,#38bdf8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{margin-top:18px;color:var(--dim);font-size:clamp(15px,1.4vw,18px);max-width:470px}
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
@@ -191,6 +191,18 @@ body.away .scroll-hint{opacity:0}
 .footer{border-top:1px solid var(--line);padding:28px 0}
 .foot{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between;font-size:13.5px}
 .muted{color:var(--muted)}
+
+/* FAQ */
+.faq-wrap{max-width:900px}
+.faq{display:grid;gap:10px;margin-top:40px}
+.faq details{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 20px;transition:border-color .3s}
+.faq details[open]{border-color:rgba(245,158,11,.45)}
+.faq summary{cursor:pointer;list-style:none;padding:18px 30px 18px 0;font-family:var(--display);font-weight:600;font-size:17px;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--accent);font-size:22px;transition:transform .3s}
+.faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+.faq details p{color:var(--dim);padding:0 0 18px;font-size:15px}
+.lead strong,.sub strong{color:var(--text);font-weight:600}
 
 /* reveal */
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}

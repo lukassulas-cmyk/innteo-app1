@@ -26,7 +26,7 @@ const STATIONS = [
     key: 'vytapeni', abbr: 'Teplo', name: 'Kotelna', service: 'Vytápění', icon: 'flame',
     color: 0xff6b2c, css: '#ff6b2c', supply: 0xff4d2e, ret: 0x3b82f6, kind: 'pipes',
     eyebrow: 'Vytápění · kotelny',
-    title: 'Kotelny, které topí tiše a úsporně',
+    title: 'Teplo spolehlivě a bez plýtvání',
     text: 'Navrhujeme, montujeme a modernizujeme plynové kotelny pro bytové domy, firmy i veřejné budovy. Od výměny kotle po kompletní rekonstrukci strojovny.',
     list: ['Kaskády kondenzačních kotlů', 'Rozdělovače, sběrače a hydraulické vyvážení', 'Ekvitermní regulace a příprava TV', 'Revize, servis a nonstop diagnostika'],
     tags: ['Kondenzační kotle', 'Kaskády', 'Ohřev TV'],
@@ -53,19 +53,19 @@ const STATIONS = [
     short: 'Rozvaděče, regulátory, vizualizace a dálkový dohled nad celou technologií.',
   },
   {
-    key: 'chlazeni', abbr: 'Chlad', name: 'Chladicí centrála', service: 'Chlazení', icon: 'snow',
+    key: 'chlazeni', abbr: 'Klima', name: 'Klimatizace a chlazení', service: 'Klimatizace', icon: 'snow',
     color: 0x38bdf8, css: '#38bdf8', supply: 0x38bdf8, ret: 0x93c5fd, kind: 'pipes',
-    eyebrow: 'Chlazení · chladicí centrály',
-    title: 'Chlad tam, kde ho potřebujete',
-    text: 'Kapalinové chladiče, rozvody chladu a koncové prvky pro kanceláře, výrobu i technologické provozy. Včetně free-coolingu a zpětného využití tepla.',
-    list: ['Chillery a chladicí centrály', 'Free-cooling a rekuperace tepla', 'Rozvody chladu, fancoily, chladicí stropy', 'Kontroly těsnosti a evidence F-plynů'],
-    tags: ['Chillery', 'Free-cooling', 'F-plyny'],
+    eyebrow: 'Klimatizace · VRV/VRF · chlazení',
+    title: 'Příjemných 22 °C i v nejparnějším létě',
+    text: 'Klimatizace a VRV/VRF systémy pro kanceláře, obchody a úřady, chillery a chladicí centrály pro výrobu a technologie. Navržené tiše, úsporně a s napojením na řízení budovy.',
+    list: ['Klimatizace a VRV/VRF pro kanceláře a komerční budovy', 'Chillery, chladicí centrály a free-cooling', 'Rozvody chladu, fancoily, chladicí stropy', 'Servis, kontroly těsnosti a evidence F-plynů'],
+    tags: ['VRV/VRF', 'Chillery', 'F-plyny'],
     short: 'Chillery, rozvody chladu a free-cooling pro kanceláře i výrobu.',
   },
   {
-    key: 'vzt', abbr: 'VZT', name: 'Vzduchotechnika', service: 'Vzduchotechnika', icon: 'wind',
+    key: 'vzt', abbr: 'VZT', name: 'Rekuperace a VZT', service: 'Rekuperace', icon: 'wind',
     color: 0x2dd4bf, css: '#2dd4bf', supply: 0x99f6e4, ret: 0x99f6e4, kind: 'duct',
-    eyebrow: 'Vzduchotechnika · větrání',
+    eyebrow: 'Rekuperace · vzduchotechnika',
     title: 'Čerstvý vzduch bez tepelných ztrát',
     text: 'Vzduchotechnické jednotky s rekuperací, rozvody vzduchu a jejich regulace podle CO₂ a obsazenosti. Komfort pro lidi, úspora pro budovu.',
     list: ['VZT jednotky s rekuperací tepla', 'Rozvody, distribuční prvky, protihluk', 'Měření a zaregulování průtoků', 'Řízení podle CO₂ a vlhkosti'],
@@ -92,11 +92,10 @@ STATIONS.forEach((s, i) => {
   dock.appendChild(b);
   s.dockBtn = b;
 
-  const c = document.createElement('article');
-  c.className = 'card reveal';
-  c.style.setProperty('--c', s.css);
-  c.style.transitionDelay = `${i * 70}ms`;
-  c.innerHTML = `<div class="ic">${svgIcon(s.icon)}</div><h3>${s.service}</h3><p>${s.short}</p><button class="go">Proletět se tam ›</button>`;
+});
+// statické karty služeb v HTML (kvůli SEO) – jen připojíme přelet ke stanici
+document.querySelectorAll('[data-card]').forEach((c) => {
+  const i = +c.dataset.card;
   c.querySelector('.go').addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     setTimeout(() => goTo(i), reduceMotion ? 0 : 650);
@@ -105,7 +104,6 @@ STATIONS.forEach((s, i) => {
     const r = c.getBoundingClientRect();
     c.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
   });
-  cards.appendChild(c);
 });
 document.querySelectorAll('[data-fly]').forEach((el) => el.addEventListener('click', () => goTo(+el.dataset.fly)));
 
