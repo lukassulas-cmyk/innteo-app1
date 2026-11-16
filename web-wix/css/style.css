@@ -18,17 +18,16 @@ img,svg{display:block}
   padding:14px clamp(16px,4vw,40px);transition:background .3s,backdrop-filter .3s,border-color .3s;border-bottom:1px solid transparent}
 .topbar.solid{background:rgba(7,10,18,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:var(--line)}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;letter-spacing:.02em}
-/* logo INNTEO Sulas – červeno-modrý symbol + písmo ve stylu Century Gothic */
-.brand-mark{width:35px;height:36px}
-.brand-mark.sm{width:24px;height:25px}
-.brand-text{display:flex;flex-direction:column;line-height:1.05;font-family:"Didact Gothic","Century Gothic","URW Gothic",sans-serif;letter-spacing:.01em}
-.brand-text b{font-weight:400;font-size:21px;color:var(--text)}
-.brand-text small{font-size:9.5px;letter-spacing:.3em;color:var(--dim);margin-top:4px}
-.foot .brand-text b{font-size:15px}
-.brand-text.big{align-items:center;margin:16px 0 22px}
-.brand-text.big b{font-size:32px}
-.brand-text.big small{font-size:12px;margin-top:8px}
-.loader-logo{width:77px;height:80px}
+/* logo INNTEO – originální logotyp, ventilátor v „O“ se točí */
+.logo{--h:34px;display:inline-flex;align-items:center}
+.logo img{height:var(--h);width:auto;display:block}
+.logo .fan{transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.brand:hover .logo .fan{transform:rotate(360deg)}
+.logo.spin .fan,body.flying .topbar .logo .fan{animation:fanspin 1.1s linear infinite}
+@keyframes fanspin{to{transform:rotate(360deg)}}
+.logo.big{--h:clamp(70px,11vw,120px)}
+.logo.sm{--h:22px}
+.tagline{margin-top:18px;font-size:clamp(10px,1.5vw,13px);letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600;text-align:center;padding:0 16px}
 .nav{display:flex;gap:6px;align-items:center}
 .nav a{padding:8px 14px;border-radius:999px;color:var(--dim);font-size:14px;font-weight:500;transition:color .2s,background .2s}
 .nav a:hover{color:var(--text);background:rgba(255,255,255,.06)}
