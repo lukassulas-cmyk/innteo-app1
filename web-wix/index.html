@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>INNTEO Sulas – HVAC a MaR</title>
+<meta name="description" content="INNTEO Sulas s.r.o. – vytápění, chlazení, vzduchotechnika, tepelná čerpadla a měření a regulace (MaR). Návrh, montáž, zprovoznění a servis technologií budov.">
+<meta name="theme-color" content="#070a12">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <a class="brand" href="#top" aria-label="INNTEO Sulas – úvod">
+    <span class="brand-badge">IS</span>
+    <span class="brand-name">INNTEO <b>Sulas</b></span>
+  </a>
+  <nav class="nav" aria-label="Hlavní navigace">
+    <a href="#sluzby">Služby</a>
+    <a href="#mar">MaR</a>
+    <a href="#postup">Jak pracujeme</a>
+    <a href="#kontakt" class="nav-cta">Poptat řešení</a>
+  </nav>
+</header>
+
+<!-- ============ HERO: 3D strojovna ============ -->
+<section class="hero" id="top">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="hero-vignette"></div>
+
+  <div class="loader" id="loader"><span class="loader-ring"></span><span>Spouštím technologii…</span></div>
+
+  <div class="hero-copy" id="heroCopy">
+    <p class="eyebrow"><span class="dot"></span> HVAC · MaR · Servis</p>
+    <h1>Teplo, chlad a vzduch.<br><span class="grad">Pod kontrolou.</span></h1>
+    <p class="lead">Navrhujeme, montujeme a řídíme technologie budov – od kotelny po chladicí centrálu. Vyberte si technologii a proleťte se k ní potrubím.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" data-fly="0">Spustit prohlídku</button>
+      <a class="btn btn-ghost" href="#sluzby">Přehled služeb</a>
+    </div>
+  </div>
+
+  <div class="labels" id="labels"></div>
+
+  <div class="dock" id="dock" role="toolbar" aria-label="Vyberte technologii"></div>
+
+  <div class="flight" id="flight" aria-live="polite">
+    <span class="flight-to">Letím do: <b id="flightName"></b></span>
+    <span class="flight-bar"><i id="flightBar"></i></span>
+  </div>
+
+  <aside class="panel" id="panel" aria-hidden="true">
+    <button class="panel-close" id="panelClose" aria-label="Zpět na přehled">✕</button>
+    <p class="eyebrow" id="pEyebrow"></p>
+    <h2 id="pTitle"></h2>
+    <p id="pText"></p>
+    <ul class="ticks" id="pList"></ul>
+    <div class="tags" id="pTags"></div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost" id="pBack">‹ Přehled</button>
+      <button class="btn btn-primary" id="pNext">Další technologie ›</button>
+    </div>
+  </aside>
+
+  <a class="scroll-hint" href="#sluzby" aria-label="Posunout dolů"><span></span></a>
+</section>
+
+<main>
+  <!-- ============ SLUŽBY ============ -->
+  <section class="section" id="sluzby">
+    <div class="wrap">
+      <p class="eyebrow reveal">Co děláme</p>
+      <h2 class="h2 reveal">Pět technologií. Jeden partner.</h2>
+      <p class="sub reveal">Celá technika budovy od jedné firmy – bez přehazování odpovědnosti mezi topenáři, chlaďaři a „tím od regulace“.</p>
+      <div class="cards" id="cards"></div>
+    </div>
+  </section>
+
+  <!-- ============ MaR ============ -->
+  <section class="section section-alt" id="mar">
+    <div class="wrap split">
+      <div>
+        <p class="eyebrow reveal">Měření a regulace</p>
+        <h2 class="h2 reveal">Technologie je jen tak dobrá, jak dobře je řízená.</h2>
+        <p class="sub reveal">Stejný kotel může s chytrou regulací spotřebovat výrazně méně energie. MaR propojí čidla, regulátory a akční členy do jednoho systému, který budovu sleduje, vyhodnocuje a sám dolaďuje.</p>
+        <ul class="ticks reveal">
+          <li>Rozvaděče MaR – návrh, výroba a zapojení</li>
+          <li>Programování regulátorů a ekvitermní křivky</li>
+          <li>Vizualizace a dálkový dohled přes web</li>
+          <li>Integrace přes BACnet, Modbus a M-Bus</li>
+          <li>Optimalizace provozu stávajících systémů</li>
+        </ul>
+      </div>
+      <div class="loop reveal" aria-label="Schéma regulační smyčky">
+        <svg viewBox="0 0 400 400" class="loop-svg">
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+          </defs>
+          <circle cx="200" cy="200" r="140" class="loop-track"/>
+          <circle cx="200" cy="200" r="140" class="loop-flow"/>
+          <circle r="7" class="loop-dot"><animateMotion dur="6s" repeatCount="indefinite" path="M200,60 a140,140 0 1,1 -0.1,0"/></circle>
+        </svg>
+        <div class="node n1"><b>Čidlo</b><span>měří teplotu, tlak, CO₂</span></div>
+        <div class="node n2"><b>Regulátor</b><span>porovná s požadavkem</span></div>
+        <div class="node n3"><b>Akční člen</b><span>ventil, čerpadlo, klapka</span></div>
+        <div class="node n4"><b>Technologie</b><span>kotel, chiller, VZT</span></div>
+        <div class="loop-center"><span class="live" id="liveT">21.0</span><small>°C v budově</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ POSTUP ============ -->
+  <section class="section" id="postup">
+    <div class="wrap">
+      <p class="eyebrow reveal">Jak pracujeme</p>
+      <h2 class="h2 reveal">Od prohlídky po dlouhodobý servis</h2>
+      <ol class="steps" id="steps">
+        <li class="reveal"><span class="num">01</span><h3>Prohlídka a audit</h3><p>Projdeme stávající technologii, spotřeby a slabá místa. Řekneme na rovinu, co má smysl řešit.</p></li>
+        <li class="reveal"><span class="num">02</span><h3>Návrh řešení</h3><p>Navrhneme technologii i regulaci dohromady, s rozpočtem a harmonogramem.</p></li>
+        <li class="reveal"><span class="num">03</span><h3>Montáž</h3><p>Realizace vlastními techniky, čisté pracoviště, minimum odstávek provozu.</p></li>
+        <li class="reveal"><span class="num">04</span><h3>Zprovoznění a MaR</h3><p>Oživení, zaregulování, naprogramování regulace a předání s dokumentací.</p></li>
+        <li class="reveal"><span class="num">05</span><h3>Servis a dohled</h3><p>Pravidelné prohlídky, kontroly těsnosti F-plynů a vzdálený dohled nad provozem.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ PROČ MY ============ -->
+  <section class="section section-alt" id="proc">
+    <div class="wrap">
+      <p class="eyebrow reveal">Proč INNTEO</p>
+      <h2 class="h2 reveal">Rozumíme strojům i tomu, co je řídí</h2>
+      <div class="pillars">
+        <div class="pillar reveal"><span class="pi">⚙</span><h3>HVAC + MaR v jednom</h3><p>Technologii i regulaci dodáváme sami, takže do sebe zapadají už od návrhu.</p></div>
+        <div class="pillar reveal"><span class="pi">↯</span><h3>Úspora energie</h3><p>Hledáme, kde budova zbytečně topí, chladí nebo větrá – a opravíme to.</p></div>
+        <div class="pillar reveal"><span class="pi">◎</span><h3>Servis, který přijede</h3><p>Pravidelná údržba, rychlá diagnostika poruch a přehledné servisní protokoly.</p></div>
+        <div class="pillar reveal"><span class="pi">✓</span><h3>Dokumentace v pořádku</h3><p>Revize, evidence F-plynů a předávací dokumentace bez dohledávání.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KONTAKT ============ -->
+  <section class="section cta" id="kontakt">
+    <div class="wrap cta-inner reveal">
+      <h2 class="h2">Máte technologii, která by mohla běžet lépe?</h2>
+      <p class="sub">Ozvěte se – domluvíme prohlídku a navrhneme řešení na míru vaší budově.</p>
+      <div class="contact" id="contact"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot">
+    <span class="brand"><span class="brand-badge sm">IS</span> INNTEO Sulas s.r.o.</span>
+    <span class="muted">Vytápění · Chlazení · Vzduchotechnika · Tepelná čerpadla · MaR</span>
+    <span class="muted">© <span id="year"></span></span>
+  </div>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
