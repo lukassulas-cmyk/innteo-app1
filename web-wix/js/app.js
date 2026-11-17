@@ -23,7 +23,7 @@ const ICONS = {
 
 const STATIONS = [
   {
-    key: 'vytapeni', abbr: 'Teplo', name: 'Kotelna', service: 'Vytápění', icon: 'flame',
+    key: 'vytapeni', ask: 'Kotelna / vytápění', abbr: 'Teplo', name: 'Kotelna', service: 'Vytápění', icon: 'flame',
     color: 0xe4161c, css: '#ef3b40', supply: 0xff3030, ret: 0x3b82f6, kind: 'pipes',
     eyebrow: 'Vytápění · kotelny',
     title: 'Teplo spolehlivě a bez plýtvání',
@@ -33,7 +33,7 @@ const STATIONS = [
     short: 'Nové i modernizované kotelny, kaskády kondenzačních kotlů a ekvitermní regulace.',
   },
   {
-    key: 'tc', abbr: 'TČ', name: 'Tepelná čerpadla', service: 'Tepelná čerpadla', icon: 'pump',
+    key: 'tc', ask: 'Tepelné čerpadlo', abbr: 'TČ', name: 'Tepelná čerpadla', service: 'Tepelná čerpadla', icon: 'pump',
     color: 0x22c55e, css: '#22c55e', supply: 0xff3030, ret: 0x3b82f6, kind: 'pipes',
     eyebrow: 'Obnovitelné zdroje',
     title: 'Tepelná čerpadla navržená na reálný provoz',
@@ -43,7 +43,7 @@ const STATIONS = [
     short: 'Samostatná i hybridní tepelná čerpadla s akumulací a chytrým řízením.',
   },
   {
-    key: 'mar', abbr: 'MaR', name: 'Řídicí systém', service: 'MaR', icon: 'chip',
+    key: 'mar', ask: 'Měření a regulace (MaR)', abbr: 'MaR', name: 'Řídicí systém', service: 'MaR', icon: 'chip',
     color: 0xb4366a, css: '#c0457a', supply: 0xe0508a, ret: 0xe0508a, kind: 'cable',
     eyebrow: 'Měření a regulace',
     title: 'Mozek celé budovy',
@@ -53,7 +53,7 @@ const STATIONS = [
     short: 'Rozvaděče, regulátory, vizualizace a dálkový dohled nad celou technologií.',
   },
   {
-    key: 'chlazeni', abbr: 'Klima', name: 'Klimatizace a chlazení', service: 'Klimatizace', icon: 'snow',
+    key: 'chlazeni', ask: 'Klimatizace', abbr: 'Klima', name: 'Klimatizace a chlazení', service: 'Klimatizace', icon: 'snow',
     color: 0x3a8ee0, css: '#4a90d9', supply: 0x3a8ee0, ret: 0x93c5fd, kind: 'pipes',
     eyebrow: 'Klimatizace · VRV/VRF · chlazení',
     title: 'Příjemných 22 °C i v nejparnějším létě',
@@ -63,7 +63,7 @@ const STATIONS = [
     short: 'Chillery, rozvody chladu a free-cooling pro kanceláře i výrobu.',
   },
   {
-    key: 'vzt', abbr: 'VZT', name: 'Rekuperace a VZT', service: 'Rekuperace', icon: 'wind',
+    key: 'vzt', ask: 'Rekuperace / vzduchotechnika', abbr: 'VZT', name: 'Rekuperace a VZT', service: 'Rekuperace', icon: 'wind',
     color: 0x9fbbd8, css: '#9fbbd8', supply: 0xd6e4f2, ret: 0xd6e4f2, kind: 'duct',
     eyebrow: 'Rekuperace · vzduchotechnika',
     title: 'Čerstvý vzduch bez tepelných ztrát',
@@ -159,6 +159,7 @@ function fillPanel(i) {
   $('#pList').innerHTML = s.list.map((x) => `<li>${x}</li>`).join('');
   $('#pTags').innerHTML = s.tags.map((x) => `<span>${x}</span>`).join('');
   $('#pNext').textContent = `${STATIONS[(i + 1) % STATIONS.length].service} ›`;
+  $('#pAsk').dataset.openChat = s.ask;
 }
 function setActive(i) {
   STATIONS.forEach((s, k) => s.dockBtn.classList.toggle('active', k === i));

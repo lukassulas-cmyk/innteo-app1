@@ -30,9 +30,8 @@
 
 <link rel="icon" href="img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=inter:400,500,600|space-grotesk:500,600,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 
 <script type="application/ld+json">
@@ -144,7 +143,8 @@
     <div class="tags" id="pTags"></div>
     <div class="panel-actions">
       <button class="btn btn-ghost" id="pBack">‹ Přehled</button>
-      <button class="btn btn-primary" id="pNext">Další technologie ›</button>
+      <button class="btn btn-ghost" id="pNext">Další technologie ›</button>
+      <button class="btn btn-primary" id="pAsk" data-open-chat>Poptat ›</button>
     </div>
   </aside>
 
@@ -169,25 +169,25 @@
           <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="10" cy="12" r="4"/><path d="M10 8.5v7M6.5 12h7M17.5 9v6"/></svg></div>
           <h3>Tepelná čerpadla</h3>
           <p>Vzduch–voda, země–voda i&nbsp;hybridní systémy s&nbsp;kotlem. Správně nadimenzovaná a&nbsp;chytře řízená – úspora, která je vidět na fakturách.</p>
-          <button class="go">Proletět se tam ›</button>
+          <div class="card-actions"><button class="go">Proletět se tam ›</button><button class="go ask" data-open-chat="Tepelné čerpadlo">Poptat tepelné čerpadlo ›</button></div>
         </article>
         <article class="card reveal" data-card="4" style="--c:#9fbbd8">
           <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5h11a3 3 0 1 0-3-3M3 12.5h15.5a3 3 0 1 1-3 3M3 16.5h7"/></svg></div>
           <h3>Rekuperace a vzduchotechnika</h3>
           <p>Čerstvý vzduch bez tepelných ztrát. VZT jednotky s&nbsp;rekuperací, rozvody, zaregulování a&nbsp;řízení podle CO₂ – lidé se lépe soustředí, budova méně spotřebuje.</p>
-          <button class="go">Proletět se tam ›</button>
+          <div class="card-actions"><button class="go">Proletět se tam ›</button><button class="go ask" data-open-chat="Rekuperace / vzduchotechnika">Poptat rekuperaci ›</button></div>
         </article>
         <article class="card reveal" data-card="0" style="--c:#ef3b40">
           <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.8 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2.2 1.1-3.6 2.3-4.6.1 1.8.9 3 2.2 3.3C12.2 8.6 11 6 12 3z"/></svg></div>
           <h3>Kotelny a vytápění</h3>
           <p>Nové i&nbsp;modernizované kotelny, kaskády kondenzačních kotlů, rozdělovače a&nbsp;ekvitermní regulace. Teplo spolehlivě a&nbsp;bez plýtvání.</p>
-          <button class="go">Proletět se tam ›</button>
+          <div class="card-actions"><button class="go">Proletět se tam ›</button><button class="go ask" data-open-chat="Kotelna / vytápění">Poptat kotelnu ›</button></div>
         </article>
         <article class="card reveal" data-card="2" style="--c:#c0457a">
           <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2.5V6M15 2.5V6M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/><path d="M9.5 14l1.8-3 1.4 2 1.8-3"/></svg></div>
           <h3>Měření a regulace (MaR)</h3>
           <p>Rozvaděče, regulátory, vizualizace a&nbsp;dálkový dohled. Celá budova na jedné obrazovce – a&nbsp;technologie, která běží jen tehdy, kdy má.</p>
-          <button class="go">Proletět se tam ›</button>
+          <div class="card-actions"><button class="go">Proletět se tam ›</button><button class="go ask" data-open-chat="Měření a regulace (MaR)">Poptat MaR ›</button></div>
         </article>
       </div>
     </div>
@@ -306,7 +306,7 @@
           <label>Lokalita<input name="location" placeholder="Město / část Prahy"></label>
           <label>Plocha (m²)<input name="area" type="number" min="1" inputmode="numeric"></label>
           <label class="full">Zpráva<textarea name="message" rows="4" maxlength="3000" placeholder="Co potřebujete? Počet místností, termín, stávající zařízení…"></textarea></label>
-          <label class="full chk"><input name="consent" type="checkbox" required> <span>Souhlasím se zpracováním osobních údajů pro vyřízení poptávky *</span></label>
+          <label class="full chk"><input name="consent" type="checkbox" required> <span>Souhlasím se zpracováním osobních údajů pro vyřízení poptávky podle <a href="ochrana-osobnich-udaju.html" target="_blank">zásad ochrany osobních údajů</a> *</span></label>
         </div>
         <div class="inq-msg" id="inqMsg" role="status"></div>
         <button class="btn btn-primary" type="submit">Odeslat poptávku</button>
@@ -319,7 +319,7 @@
   <div class="wrap foot">
     <span class="brand"><span class="logo sm" role="img" aria-label="INNTEO"><img src="img/innteo-word.png" alt="" width="511" height="200"><img class="fan" src="img/innteo-fan.png" alt="" width="200" height="200"></span> <span class="muted">INNTEO Sulas s.r.o.</span></span>
     <span class="muted">Klimatizace · Tepelná čerpadla · Rekuperace · Kotelny · MaR — Praha a Středočeský kraj</span>
-    <span class="muted">© <span id="year"></span></span>
+    <span class="muted foot-links"><a href="ochrana-osobnich-udaju.html">Ochrana osobních údajů</a> · <a href="ochrana-osobnich-udaju.html#cookies">Cookies</a> · © <span id="year"></span></span>
   </div>
 </footer>
 

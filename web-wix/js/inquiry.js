@@ -22,14 +22,20 @@ const EMAIL = 'info@innteo.net';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /* ---------------- odeslání do Wix Forms ---------------- */
-const store = createFormStore({ formId: FORM_ID });
-store.start();
+// Spojení s Wixem (a uložení jeho technického přístupového údaje) vzniká až ve chvíli,
+// kdy návštěvník začne vyplňovat formulář nebo otevře asistenta.
+let store = null;
+function getStore() {
+  if (!store) { store = createFormStore({ formId: FORM_ID }); store.start(); }
+  return store;
+}
 
 function formReady() {
   return new Promise((resolve) => {
-    const now = store.getState();
+    const st = getStore();
+    const now = st.getState();
     if (now.form || now.errors[FORM_ERROR]) return resolve(now.form);
-    const off = store.subscribe((s) => {
+    const off = st.subscribe((s) => {
       if (s.form || s.errors[FORM_ERROR]) { off(); resolve(s.form); }
     });
   });
@@ -58,12 +64,13 @@ async function submitInquiry(d) {
   };
   const area = Number(String(d.area || '').replace(',', '.'));
   if (area > 0) values[T.area] = area;
-  store.reset();
-  store.setValues((prev) => ({ ...prev, ...values }));
+  const st = getStore();
+  st.reset();
+  st.setValues((prev) => ({ ...prev, ...values }));
   try {
-    const out = await store.submit();
+    const out = await st.submit();
     if (out === false) {
-      const errs = store.getState().errors;
+      const errs = st.getState().errors;
       return { ok: false, errors: errs, error: errs[FORM_ERROR] || 'Zkontrolujte prosím vyplněné údaje.' };
     }
     return { ok: true };
@@ -77,6 +84,7 @@ const formEl = document.getElementById('inqForm');
 if (formEl) {
   const msg = document.getElementById('inqMsg');
   const btn = formEl.querySelector('button[type="submit"]');
+  formEl.addEventListener('focusin', () => getStore(), { once: true });
   formEl.addEventListener('submit', async (e) => {
     e.preventDefault();
     const v = Object.fromEntries(new FormData(formEl).entries());
@@ -176,7 +184,7 @@ const STEPS = {
   name: { ask: 'Jak se jmenujete?', input: 'text' },
   email: { ask: 'Na jaký e-mail vám pošleme odpověď?', input: 'email' },
   phone: { ask: 'A telefon? Nepovinné, ale domluva bývá rychlejší.', options: ['Přeskočit'], input: 'tel' },
-  consent: { ask: 'Souhlasíte se zpracováním osobních údajů pro vyřízení poptávky?', options: ['Ano, souhlasím'], input: false },
+  consent: { ask: 'Souhlasíte se zpracováním osobních údajů pro vyřízení poptávky? (<a href="ochrana-osobnich-udaju.html" target="_blank">zásady</a>)', options: ['Ano, souhlasím'], input: false },
 };
 
 function buildFlow(service) {
@@ -272,6 +280,7 @@ function restart() {
 function openChat(preset) {
   box.classList.add('open');
   fab.classList.add('hide');
+  getStore();
   if (!started) { started = true; restart(); }
   if (preset && flow[idx] === 'service') setTimeout(() => answer(preset, true), 700);
 }
