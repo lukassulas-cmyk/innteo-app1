@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="description" content="HVAC Technik – servisní hra o chlazení, vzduchotechnice a MaR (regulaci a měření).">
+<title>HVAC Technik – servisní hra</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1220;color:#e8eefc;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;min-height:100dvh}
+#top{position:sticky;top:0;z-index:5;background:#0f182b;border-bottom:1px solid #23324f;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+#app{padding:14px 16px 110px;max-width:640px;margin:0 auto}
+#nav{position:fixed;bottom:0;left:0;right:0;background:#0f182b;border-top:1px solid #23324f;display:flex;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom);z-index:5;max-width:640px;margin:0 auto}
+#nav button{flex:1;background:none;border:0;color:#8fa0c0;padding:6px 2px;font:12px system-ui;min-height:58px;cursor:pointer}
+#nav button.on{color:#38bdf8}
+#nav .ic{font-size:20px;display:block;line-height:1.3}
+.card{background:#131d33;border:1px solid #23324f;border-radius:14px;padding:14px;margin:10px 0;width:100%;text-align:left;color:inherit;font:inherit;display:block}
+button.card{cursor:pointer}
+.main{border-color:#f59e0b}
+.btn{min-height:48px;border-radius:12px;border:1px solid #2d3f63;background:#1a2745;color:#e8eefc;font:inherit;font-weight:700;padding:10px 14px;cursor:pointer}
+.btn.pri{background:#38bdf8;color:#04121f;border-color:#38bdf8}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{min-height:40px;padding:6px 10px;font-size:14px}
+.full{width:100%;display:block;margin:10px 0}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:14px;border-radius:12px;border:2px solid #2d3f63;background:#15223d;color:#e8eefc;font:inherit;min-height:52px;cursor:pointer}
+.opt.ok{border-color:#22c55e;background:#123524}
+.opt.bad{border-color:#ef4444;background:#3a1620}
+.opt:disabled{cursor:default}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tgrid .opt{margin:0}
+.sel{border-color:#38bdf8!important;background:#0c3a52!important}
+.tag{font-size:12px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.jt{font-size:18px;font-weight:700;margin:4px 0}
+.mut{color:#8fa0c0;font-size:14px}
+.ac{color:#38bdf8}
+.ok-t{color:#22c55e;font-weight:600}
+.bad-t{color:#f87171;font-size:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #1e2b47}
+.stat:last-child{border-bottom:0}
+.fb{padding:12px;border-radius:12px;margin:12px 0;font-weight:600}
+.fb.good{background:#123524;color:#bbf7d0}
+.fb.bad{background:#3a1620;color:#fecaca}
+.cells{display:grid;gap:6px;margin:12px 0}
+.cell{aspect-ratio:1.4;border-radius:8px;border:2px solid #2d3f63;background:#6b4f33;cursor:pointer}
+.cell.clean{background:#dbeafe;border-color:#93c5fd}
+.cell:disabled{cursor:default}
+.bar{position:relative;height:50px;background:#1b2740;border-radius:12px;border:1px solid #2d3f63;margin:16px 0;overflow:hidden}
+.zone{position:absolute;top:0;bottom:0;background:rgba(34,197,94,.35);border-left:2px solid #22c55e;border-right:2px solid #22c55e}
+.mark{position:absolute;top:-4px;bottom:-4px;width:5px;background:#f8fafc;left:0;margin-left:-2px;border-radius:3px}
+.prog{height:6px;background:#1b2740;border-radius:4px;overflow:hidden;margin-top:8px}
+.prog>i{display:block;height:100%;background:#38bdf8;transition:width .3s}
+input[type=range]{width:100%;height:44px;margin:8px 0}
+input[type=text]{width:100%;min-height:46px;border-radius:10px;border:1px solid #2d3f63;background:#0b1220;color:#e8eefc;padding:8px 12px;font:inherit}
+.link{background:none;border:0;color:#38bdf8;font:inherit;padding:8px 0;cursor:pointer;min-height:40px}
+h2{margin:6px 0 8px;font-size:22px}
+h3.q{margin:10px 0 6px;font-size:18px;line-height:1.35}
+.modal{position:fixed;inset:0;background:rgba(2,6,15,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.modal.hide{display:none}
+.sheet{background:#131d33;border-radius:18px 18px 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));width:100%;max-width:640px;max-height:88dvh;overflow:auto;border-top:1px solid #2d3f63}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:#1e293b;padding:10px 16px;border-radius:12px;border:1px solid #334155;z-index:30;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.stars{color:#f59e0b;letter-spacing:2px}
+pre.proto{white-space:pre-wrap;background:#0b1220;padding:12px;border-radius:12px;font:14px/1.5 ui-monospace,Menlo,monospace;border:1px solid #23324f;overflow-x:auto}
+details{border-bottom:1px solid #1e2b47}
+details summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}
+details p{margin:0 0 12px;color:#cbd5e1}
+.sec{margin-top:18px}
+.sec>h3{margin:0 0 4px;font-size:16px;color:#8fa0c0;text-transform:uppercase;letter-spacing:.05em}
+.lbl{display:block;margin:12px 0 6px;color:#8fa0c0;font-size:14px}
+.warn{color:#fbbf24}
+svg text{font-family:system-ui,sans-serif}
+</style>
+</head>
+<body>
+<header id="top"></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="modal" class="modal hide"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   HVAC Technik – servisní hra (chlazení, vzduchotechnika, MaR)
+   Jeden soubor, bez závislostí. Uložení: localStorage.
+   ============================================================ */
+
+const KEY = 'hvac-technik-v1';
+const DAY_COST = 400;
+const TITLES = ['Učeň','Technik','Servisní technik','Specialista MaR','Mistr HVAC'];
+const CHAPTERS = ['Základy servisu','Chladivo a přehřátí','MaR a regulace','Velké zakázky'];
+
+const TOOLS = {
+  klice:      {n:'Sada klíčů', p:0},
+  multimetr:  {n:'Multimetr', p:0},
+  manometr:   {n:'Manometrická sada', p:0},
+  vysavac:    {n:'Průmyslový vysavač', p:0},
+  vakuometr:  {n:'Vakuometr', p:1200},
+  cistka:     {n:'Čistič lamel', p:900},
+  sonda:      {n:'Teplotní sonda', p:600},
+  detektor:   {n:'Detektor úniků', p:2800},
+  pumpa:      {n:'Vakuová pumpa', p:3500},
+  kalibrator: {n:'Kalibrátor MaR', p:5000}
+};
+const START_TOOLS = ['klice','multimetr','manometr','vysavac'];
+const PARTS = {
+  filtr:      {n:'Filtr G4', p:150},
+  kondenzator:{n:'Kondenzátor motoru 8 µF', p:350},
+  cidlo:      {n:'Čidlo PT1000', p:250}
+};
+const CHEM = {
+  R32:   {n:'R32',   gwp:675,  p:350},
+  R410A: {n:'R410A', gwp:2088, p:600},
+  R454B: {n:'R454B', gwp:466,  p:900},
+  R134a: {n:'R134a', gwp:1430, p:450}
+};
+const VAN = [
+  {n:'Větší dodávka (+1 zakázka denně)', p:12000},
+  {n:'Servisní regál (+1 zakázka denně)', p:25000}
+];
+const CONTRACTS = [
+  {id:'c1', n:'Údržba kanceláří Alfa', minStory:1, minRep:30, fee:250,  tpl:'s1', reward:1000},
+  {id:'c2', n:'Správa bytového domu Lípa', minStory:3, minRep:60, fee:400, tpl:'s2', reward:1400}
+];
+const CLIENTS = ['Paní Veselá','Pan Horák','Kavárna U Mlýna','Kancelář Gama s.r.o.','Byt 2+1 – paní Nováková','Pan Dvořák – rodinný dům','Prodejna Sever','Fitness centrum Jih','Pan Marek – byt 3+kk','Penzion Na Kopci','Pekárna Zlatý klas','Sklad Logistik s.r.o.'];
+const ADDRS = ['Praha 6, Dejvice','Brno, Štefánikova 5','Plzeň, Kollárova 3','Liberec, Pražská 17','Hradec Králové, Třída 12','Olomouc, Hodolanská 40','České Budějovice, Lannova 8','Zlín, Trnkova 22'];
+const LEAK_PTS = [[130,140,'A'],[150,45,'B'],[200,45,'C'],[175,70,'D'],[175,165,'E']];
+
+/* ---------------- MISE ----------------
+   story  = pořadí hlavní zakázky (příběh)
+   pool   = může se objevit jako běžná zakázka po odehrání
+   needs  = co musíte mít (nástroje, díly, chladivo)
+   use    = co se spotřebuje
+   steps  = kroky: quiz | tool | clean | leak | slider | bar
+*/
+const MISSIONS = [
+{ id:'s1', story:1, ch:1, pool:true, title:'První den v terénu', client:'Kancelář Alfa s.r.o.', addr:'Brno, Křenová 12, 3. patro', base:1200,
+  desc:'Klimatizace v open-space hlásí zanesený filtr a slabší proud vzduchu. Vyměňte filtr a jednotku uveďte do provozu.',
+  needs:{tools:['vysavac'], parts:{filtr:1}}, use:{parts:{filtr:1}},
+  work:'Vyměněn filtr G4, vysát prostor jednotky, zkontrolován průtok vzduchu.',
+  steps:[
+    {t:'quiz', q:'Než otevřete vnitřní jednotku, co je první krok?', o:[
+      ['Odpojit napájení a zajistit jistič proti opětovnému zapnutí', true, 'Správně. Vždy nejdřív odpojte a zajistěte napájení.'],
+      ['Rovnou vyměnit filtr', false, 'Bez odpojení hrozí úraz elektrickým proudem.'],
+      ['Zkontrolovat tlak chladiva', false, 'Zbytečně – nejdřív bezpečnost.']]},
+    {t:'quiz', q:'Jak správně vložíte nový filtr?', o:[
+      ['Šipka na rámečku ukazuje ve směru proudění vzduchu', true, 'Ano, filtr má šipku pro směr proudění.'],
+      ['Je jedno, filtr je symetrický', false, 'Filtry bývají orientované. Špatný směr zhorší čištění vzduchu.'],
+      ['Šipka směřuje proti ventilátoru', false, 'Opačný směr filtr rychle zanese a zhorší filtraci.']]},
+    {t:'tool', q:'Vyberte nástroje, které k dokončení práce potřebujete.', o:['vysavac','klice','multimetr','detektor'], want:['vysavac','klice'],
+      w:'Vysavač na prach a klíče na kryt. Multimetr ani detektor tu nejsou potřeba.'}
+]},
+
+{ id:'s2', story:2, ch:1, pool:true, title:'Špinavý kondenzátor', client:'Restaurace U Mlýna', addr:'Olomouc, Dolní 7', base:1800,
+  desc:'Venkovní kondenzátor na střeše je zanesený listím a prachem. Vyčistěte lamely a zkontrolujte odtok.',
+  needs:{tools:['cistka']}, use:{},
+  work:'Vyčištěny lamely kondenzátoru čističem, zkontrolován odtok kondenzátu a proud ventilátoru.',
+  steps:[
+    {t:'quiz', q:'Kondenzátor je zanesený listím a prachem. Jak ho čistit?', o:[
+      ['Nízkotlaká voda a čistič lamel, ve směru lamel', true, 'Správně. Vysoký tlak lamely ohne a poškodí.'],
+      ['Vysokotlaká myčka zblízka – rychlejší výsledek', false, 'Ohnuté lamely zhorší výkon a mohou se poškodit.'],
+      ['Ocelový kartáč, aby to pořádně drhlo', false, 'Poškrábe hliník a výměník se rychle zničí.']]},
+    {t:'clean', q:'Vyčistěte všechny zanesené lamely – klepněte na špinavá pole.', rows:4, cols:6,
+      w:'Čistý výměník zvýší výkon a sníží spotřebu.'},
+    {t:'quiz', q:'Po čištění ještě zkontrolujete…', o:[
+      ['Odtok kondenzátu a proud ventilátoru', true, 'Ano. Zanesený odtok nebo přetížený motor jsou časté následky.'],
+      ['Nic, je hotovo', false, 'Vždy ověřte i odtok a proud motoru.'],
+      ['Vyměnit celý kompresor', false, 'Pro zanesený kondenzátor to není důvod.']]}
+]},
+
+{ id:'s3', story:3, ch:1, title:'Ventilátor kondenzační jednotky', client:'Rodinný dům Veselých', addr:'Zlín, Lesní 21', base:2200,
+  desc:'Ventilátor venkovní jednotky se netočí, motor jen hučí. Najděte závadu a opravte ji.',
+  needs:{tools:['multimetr'], parts:{kondenzator:1}}, use:{parts:{kondenzator:1}},
+  work:'Vyměněn kondenzátor motoru ventilátoru, ověřena kapacita a chod.',
+  steps:[
+    {t:'quiz', q:'Ventilátor se netočí, motor jen hučí. Nejpravděpodobnější příčina?', o:[
+      ['Vadný rozběhový kondenzátor motoru', true, 'Správně. Bez kondenzátoru motor nerozběhne.'],
+      ['Netěsný kompresor', false, 'Kompresor s ventilátorem přímo nesouvisí.'],
+      ['Přebytek chladiva', false, 'Přebytek chladiva neblokuje ventilátor.']]},
+    {t:'tool', q:'Který nástroj ověří kapacitu kondenzátoru motoru?', o:['multimetr','detektor','vakuometr','klice'], want:['multimetr'],
+      w:'Kapacitu měříte multimetrem s funkcí µF.'},
+    {t:'quiz', q:'Kondenzátor má na štítku 8 µF, naměříte 3 µF. Co uděláte?', o:[
+      ['Vyměním kondenzátor za stejné parametry', true, 'Správně. Kondenzátor je mimo toleranci a nahrazuje se.'],
+      ['Nic, 3 µF je v toleranci', false, 'Rozdíl je příliš velký, motor bude slabý.'],
+      ['Zvýším napětí na ventilátor', false, 'Tím motor poškodíte.']]}
+]},
+
+{ id:'s4', story:4, ch:2, pool:true, title:'Olejová skvrna u spoje', client:'Kancelář Beta s.r.o.', addr:'Praha 5, Radotín, Spojová 3', base:2600,
+  desc:'Na měděném potrubí venkovní jednotky je olejová skvrna. Najděte netěsnost a ověřte těsnost po opravě.',
+  needs:{tools:['detektor','manometr']}, use:{},
+  work:'Lokalizován a utěsněn únik chladiva, provedena zkouška těsnosti dusíkem.',
+  steps:[
+    {t:'quiz', q:'Na měděném potrubí je olejová skvrna. Co typicky znamená?', o:[
+      ['Možný únik chladiva – olej odchází s chladivem', true, 'Ano. Olej cirkuluje s chladivem, skvrna tedy ukazuje na netěsnost.'],
+      ['Normální stav, olej je přirozeně v potrubí', false, 'Olej uvnitř je v pořádku, ale na vnějším spoji skvrna znamená únik.'],
+      ['Ucpaný filtr sušiče', false, 'Ucpání se projeví teplotou a tlakem, ne skvrnou.']]},
+    {t:'leak', q:'Kde je netěsný spoj? Klepněte na místo úniku (A–E).'},
+    {t:'quiz', q:'Jak ověříte těsnost po opravě?', o:[
+      ['Zkouškou dusíkem na tlak a kontrolou detektorem nebo pěnou', true, 'Správně. Těsnost se ověřuje tlakovou zkouškou.'],
+      ['Jen vizuální kontrolou', false, 'Vizuálně mikrounik nepoznáte.'],
+      ['Vakuem bez tlakové zkoušky', false, 'Vakuum netěsnost neodhalí.']]}
+]},
+
+{ id:'s5', story:5, ch:2, pool:true, title:'Přehřátí na sání', client:'Hala Gama s.r.o.', addr:'Ostrava, Průmyslová 88', base:3000,
+  desc:'Chladicí okruh má nestabilní výkon. Změřte přehřátí na sání a nastavte expanzní ventil.',
+  needs:{tools:['manometr','sonda']}, use:{},
+  work:'Změřeno přehřátí na sání, nastaven expanzní ventil do cílového rozsahu 5–8 K.',
+  steps:[
+    {t:'quiz', q:'Sací tlak odpovídá teplotě varu 2 °C. Sací potrubí má 9 °C. Jaké je přehřátí?', o:[
+      ['7 K', true, 'Správně: 9 − 2 = 7 K.'],
+      ['11 K', false, '11 K by bylo 9 + 2. Přehřátí je rozdíl teplot.'],
+      ['2 K', false, '2 K je teplota varu, ne přehřátí.']]},
+    {t:'slider', q:'Nastavte expanzní ventil tak, aby přehřátí bylo 5–8 K.', min:0, max:12, unit:'K', target:[5,8],
+      hintLow:'Přehřátí je nízké – kapalina hrozí do kompresoru. Přivřete ventil.',
+      hintHigh:'Přehřátí je vysoké – chladivo se odpařuje pozdě, výkon klesá. Otevřete ventil.'},
+    {t:'quiz', q:'Co hrozí při přehřátí blízko 0 K?', o:[
+      ['Kapalné chladivo se dostane do kompresoru a může ho poškodit', true, 'Správně. Kompresor stlačuje páru, ne kapalinu.'],
+      ['Kompresor se jen trochu přehřeje', false, 'Kapalina v kompresoru je nebezpečná.'],
+      ['Vyšší výkon, je to dobré', false, 'Výkon neroste, ohrožen je kompresor.']]}
+]},
+
+{ id:'s6', story:6, ch:2, pool:true, title:'Podchlazení kapaliny', client:'Obchodní centrum Vltava', addr:'Praha 4, Vltavská 50', base:3000,
+  desc:'Kondenzátor nedodává dost chlazení. Změřte podchlazení kapaliny a upravte množství chladiva.',
+  needs:{tools:['manometr','sonda']}, use:{},
+  work:'Změřeno podchlazení kapaliny, upraveno množství chladiva do cíle 3–6 K.',
+  steps:[
+    {t:'quiz', q:'Teplota kondenzace je 42 °C, kapalina za kondenzátorem má 37 °C. Jaké je podchlazení?', o:[
+      ['5 K', true, 'Správně: 42 − 37 = 5 K.'],
+      ['−5 K', false, 'Podchlazení je kladné. Počítáte kondenzaci minus kapalinu.'],
+      ['79 K', false, 'Teploty jste sečetli. Počítá se rozdíl.']]},
+    {t:'slider', q:'Upravte množství chladiva tak, aby podchlazení bylo 3–6 K.', min:0, max:10, unit:'K', target:[3,6],
+      hintLow:'Podchlazení je nízké – chladiva je málo, kapalina se vaří už v potrubí. Doplňte.',
+      hintHigh:'Podchlazení je vysoké – chladiva je přebytek. Část odpusťte dle postupu.'},
+    {t:'quiz', q:'Nízké podchlazení obvykle znamená:', o:[
+      ['Málo chladiva, kapalina se vaří už v potrubí', true, 'Správně. Při nedostatku chladiva se páry tvoří dřív.'],
+      ['Přebytek chladiva', false, 'Přebytek dává vysoké podchlazení.'],
+      ['Vysoké přehřátí na sání', false, 'To je jiný parametr.']]}
+]},
+
+{ id:'s7', story:7, ch:2, pool:true, title:'Doplnění chladiva R32', client:'Byt 3+kk, Brno-Žabovřesky', addr:'Brno, Pekařská 14', base:3600,
+  desc:'Klimatizace bytu chladí slabě. Ověřte stav, doplňte 1,5 kg R32 a zapište do evidence F-plynů.',
+  needs:{tools:['manometr','vakuometr'], chem:{R32:1.5}}, use:{chem:{R32:1.5}},
+  work:'Doplněno 1,5 kg R32 dle štítku, zapsáno do evidence F-plynů.',
+  steps:[
+    {t:'quiz', q:'Před doplněním chladiva R32 je nutné…', o:[
+      ['Zkontrolovat štítek, množství v kg a nejdřív ověřit těsnost', true, 'Správně. Doplňovat do netěsného okruhu nemá smysl.'],
+      ['Doplnit podle pocitu', false, 'Chladivo se dávkuje podle štítku a měření.'],
+      ['Doplnit R410A, je to stejné', false, 'Chladiva nelze směšovat. Doplňte stejný typ.']]},
+    {t:'bar', q:'Doplňujte chladivo. Zastavte ručičku v zelené zóně (správný tlak).', zone:[40,55],
+      w:'Správný tlak zajistí výkon a dlouhou životnost kompresoru.'},
+    {t:'quiz', q:'Jaký je GWP chladiva R32 (kg CO₂e na kg)?', o:[
+      ['675', true, 'Správně. R410A má 2088, R454B 466.'],
+      ['2088', false, 'To je GWP chladiva R410A.'],
+      ['1430', false, 'To je GWP chladiva R134a.']]}
+]},
+
+{ id:'s8', story:8, ch:3, pool:true, title:'Čidlo PT1000 ve ventilátoru', client:'Kancelář Alfa s.r.o.', addr:'Brno, Křenová 12, 2. patro', base:3600,
+  desc:'Regulace ukazuje nesprávnou teplotu přívodu. Ověřte odpor čidla PT1000 a srovnejte korekci regulátoru.',
+  needs:{tools:['multimetr','kalibrator'], parts:{cidlo:1}}, use:{parts:{cidlo:1}},
+  work:'Vyměněno čidlo PT1000, zkalibrována korekce regulátoru, zapsáno do protokolu.',
+  steps:[
+    {t:'quiz', q:'PT1000 má při 0 °C odpor:', o:[
+      ['1000 Ω', true, 'Správně. PT1000 má 1000 Ω při 0 °C a přibližně 1385 Ω při 100 °C.'],
+      ['100 Ω', false, '100 Ω je Pt100, ne PT1000.'],
+      ['1385 Ω', false, '1385 Ω je hodnota při 100 °C.']]},
+    {t:'tool', q:'Které nástroje použijete pro kontrolu čidla?', o:['multimetr','kalibrator','detektor','pumpa'], want:['multimetr','kalibrator'],
+      w:'Odpor změříte multimetrem a srovnáte s referenčním kalibrátorem.'},
+    {t:'quiz', q:'Čidlo ukazuje 20 °C, kalibrátor 25 °C. Co uděláte?', o:[
+      ['Nastavím korekci regulátoru o +5 K a zapíšu do protokolu', true, 'Správně. Korekce se zapisuje, aby byl záznam průkazný.'],
+      ['Vyměním regulátor', false, 'Regulátor není vadný, chyba je v kalibraci čidla.'],
+      ['Nic, 5 K je v toleranci', false, 'Pět kelvinů je u regulace velká odchylka.']]}
+]},
+
+{ id:'s9', story:9, ch:3, pool:true, title:'Ekvitermní křivka kotelny', client:'Bytový dům Lípa', addr:'Jihlava, Lípová 9', base:4000,
+  desc:'Kotelna topí podle pevné teploty a v přechodných obdobích plýtvá. Nastavte ekvitermní regulaci.',
+  needs:{tools:['multimetr']}, use:{},
+  work:'Nastavena ekvitermní křivka podle venkovní teploty, zapsány provozní hodnoty.',
+  steps:[
+    {t:'quiz', q:'Co je ekvitermní regulace?', o:[
+      ['Výstupní teplota vody se mění podle venkovní teploty', true, 'Správně. Čím chladněji venku, tím teplejší voda.'],
+      ['Pevná teplota vody bez ohledu na počasí', false, 'To je prostá regulace, ne ekviterma.'],
+      ['Řízení podle vlhkosti vzduchu', false, 'Ekviterma sleduje venkovní teplotu.']]},
+    {t:'slider', q:'Venkovní teplota je −10 °C. Nastavte výstupní teplotu topné vody na 48–52 °C.', min:20, max:70, unit:'°C', target:[48,52],
+      hintLow:'Voda je příliš studená – objekt nebude vytápěn.',
+      hintHigh:'Voda je příliš horká – plýtvání a riziko přetopení.'},
+    {t:'quiz', q:'Když se venku oteplí, výstupní teplota vody má:', o:[
+      ['Klesnout', true, 'Správně. Menší tepelná ztráta budovy znamená nižší teplotu vody.'],
+      ['Vzrůst', false, 'Při oteplení je potřeba méně tepla.'],
+      ['Zůstat stejná', false, 'Ekviterma reaguje na venkovní teplotu.']]}
+]},
+
+{ id:'s10', story:10, ch:3, title:'PID a signál 4–20 mA', client:'Výrobní hala Delta', addr:'Plzeň, Technická 5', base:4200,
+  desc:'Regulace kmitá kolem žádané hodnoty a převodník tlaku hlásí podivné hodnoty. Najděte příčinu.',
+  needs:{tools:['multimetr']}, use:{},
+  work:'Diagnostikováno kmitání regulace (složka P), zkontrolován převodník 4–20 mA.',
+  steps:[
+    {t:'quiz', q:'Regulace kmitá kolem žádané hodnoty. Která složka je nejspíš příliš velká?', o:[
+      ['Proporcionální složka P – zesílení je příliš vysoké', true, 'Správně. Velký zisk P vede k překmitům a kmitání.'],
+      ['Derivační složka D – tlumí kmity, takže nemůže za ně', false, 'D kmity tlumí. Pokud je přiměřená, kmity nezpůsobí.'],
+      ['Senzor je vždy vadný', false, 'Kmity nejsou automaticky vadný senzor.']]},
+    {t:'quiz', q:'Co dělá integrační složka I?', o:[
+      ['Odstraňuje trvalou regulační odchylku', true, 'Správně. I dorovnává rozdíl v čase.'],
+      ['Předpovídá budoucí změnu', false, 'To dělá D.'],
+      ['Okamžitě zastaví všechny kmity', false, 'Zastavování kmitů není její úkol.']]},
+    {t:'quiz', q:'Senzor tlaku 0–10 bar dává výstup 4–20 mA. Naměřeno 12 mA. Jaký tlak?', o:[
+      ['5 bar', true, 'Správně: (12 − 4) / 16 × 10 = 5 bar.'],
+      ['6 bar', false, 'Zkuste znovu: 4 mA odpovídá 0 bar.'],
+      ['8 bar', false, '8 bar by odpovídalo cca 16,8 mA.']]}
+]},
+
+{ id:'s11', story:11, ch:4, title:'Chiller – vysoký tlak kondenzace', client:'Vila Zelená – technické zázemí', addr:'Ústí nad Labem, Zelená 2', base:6000,
+  desc:'Chiller hlásí vysoký tlak kondenzace a nízký výkon. Velká zakázka – diagnostika, úprava průtoku a dokumentace.',
+  needs:{tools:['manometr','sonda']}, use:{},
+  work:'Diagnostikován vysoký tlak kondenzace, upraven průtok chladicí vody, zapsány provozní hodnoty.',
+  steps:[
+    {t:'quiz', q:'Chiller hlásí vysoký tlak kondenzace. Jako první:', o:[
+      ['Zkontroluji průtok a čistotu chladicí vody a kondenzátoru', true, 'Správně. Nejčastější příčinou je omezený odvod tepla.'],
+      ['Rovnou vypustím chladivo', false, 'Chladivo se nevypouští. Nejdřív diagnostika.'],
+      ['Přidám chladivo', false, 'Přebytek chladiva tlak ještě zvýší.']]},
+    {t:'tool', q:'Vyberte nástroje pro kontrolu přehřátí a podchlazení.', o:['manometr','sonda','vakuometr','cistka'], want:['manometr','sonda'],
+      w:'Tlak a teplotu měříte manometrickou sadou a teplotní sondou.'},
+    {t:'slider', q:'Otevřete ventil chladicí vody (%), aby kondenzace klesla pod 45 °C.', min:0, max:100, unit:'%', target:[60,75],
+      hintLow:'Průtok je malý, teplo se nestihne odvést.',
+      hintHigh:'Průtok je zbytečně velký – plýtvání vodou a energií čerpadla.'},
+    {t:'quiz', q:'Po opravě do protokolu zapíšete:', o:[
+      ['Tlaky, teploty, přehřátí, podchlazení a nastavení', true, 'Správně. Měření je součástí protokolu a důkazem kvality.'],
+      ['Jen že je hotovo', false, 'Protokol musí obsahovat naměřené hodnoty.'],
+      ['Jen cenu za práci', false, 'Cena je jen malá část protokolu.']]}
+]}
+];
+
+const TPL = Object.fromEntries(MISSIONS.map(m=>[m.id,m]));
+MISSIONS.forEach(m=>{
+  m.needs = Object.assign({tools:[],parts:{},chem:{}}, m.needs);
+  m.use   = Object.assign({parts:{},chem:{}}, m.use);
+});
+const STORY = MISSIONS.filter(m=>m.story).sort((a,b)=>a.story-b.story);
+
+/* ---------------- UTIL ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const kc = n => Math.round(n).toLocaleString('cs-CZ') + ' Kč';
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const uid = () => Math.random().toString(36).slice(2,10);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const lvl = () => 1 + Math.floor(S.xp/150);
+const title = () => TITLES[Math.min(lvl()-1, TITLES.length-1)];
+const slotsMax = () => 3 + S.van;
+const stars5 = () => Math.round(S.rep/20);
+
+/* ---------------- STAV ---------------- */
+let S = null, RUN = null, TAB = 'jobs', VIEW = null, LOGV = null, RAF = 0, AC = null;
+
+function fresh(){
+  return {v:1, name:'', day:1, money:6000, rep:50, xp:0, story:0,
+    tools:START_TOOLS.slice(), parts:{}, chem:{}, van:0, contracts:[],
+    jobs:null, done:0, callbacks:[], log:[], sound:true, earned:0, jobsDone:0};
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    S = raw ? Object.assign(fresh(), JSON.parse(raw)) : fresh();
+  }catch(e){ S = fresh(); }
+  if (!Array.isArray(S.jobs)) S.jobs = genJobs();
+  ensureStory();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------------- ZAKÁZKY ---------------- */
+function makeJob(m, o={}){
+  const main = !!o.main;
+  return {
+    uid: uid(), tid: m.id, main,
+    client: o.client || (main ? m.client : rnd(CLIENTS)),
+    addr:   o.addr   || (main ? m.addr   : rnd(ADDRS)),
+    reward: o.reward ?? (main ? m.base : Math.round(m.base*(0.85+Math.random()*0.3)/10)*10),
+    tag: o.tag || null
+  };
+}
+function contractJob(c){ return makeJob(TPL[c.tpl], {tag:'smlouva', reward:c.reward, client:c.n, addr:'pravidelný servis'}); }
+function ensureStory(){
+  if (S.story < STORY.length && !S.jobs.some(j=>j.main)) S.jobs.unshift(makeJob(STORY[S.story], {main:true}));
+}
+function genJobs(){
+  const list = [];
+  if (S.story < STORY.length) list.push(makeJob(STORY[S.story], {main:true}));
+  S.contracts.forEach(id => { const c = CONTRACTS.find(x=>x.id===id); if (c) list.push(contractJob(c)); });
+  S.callbacks.forEach(cb => list.push(makeJob(TPL[cb.tid], {tag:'reklamace', reward:300, client:cb.client, addr:'reklamace'})));
+  S.callbacks = [];
+  const pool = MISSIONS.filter(m => m.pool && (!m.story || m.story <= S.story));
+  const want = slotsMax() + 2;
+  if (pool.length) while (list.length < want) list.push(makeJob(rnd(pool)));
+  return list;
+}
+function missing(m){
+  const r = [];
+  m.needs.tools.forEach(k => { if (!S.tools.includes(k)) r.push(TOOLS[k].n); });
+  Object.entries(m.needs.parts).forEach(([k,n]) => { if ((S.parts[k]||0) < n) r.push(PARTS[k].n); });
+  Object.entries(m.needs.chem).forEach(([k,n]) => { if ((S.chem[k]||0) < n-1e-9) r.push(CHEM[k].n + ' ' + n + ' kg'); });
+  return r;
+}
+
+/* ---------------- BĚH ZAKÁZKY ---------------- */
+const cur = () => RUN.m.steps[RUN.i];
+
+function startRun(id){
+  const job = S.jobs.find(j=>j.uid===id); if (!job) return;
+  const m = TPL[job.tid];
+  const miss = missing(m);
+  if (miss.length){ toast('Chybí: ' + miss.join(', ') + ' (koupit ve Skladu)'); return; }
+  if (S.done >= slotsMax()){ toast('Dnes už je plno. Ukončete den.'); return; }
+  RUN = {job, m, i:0, mist:0, fb:null, opts:[], sel:[], dirty:[], leak:0, badSpots:[], sv:0, pos:0, dir:1};
+  VIEW = null;
+  prepStep();
+  render();
+}
+
+function prepStep(){
+  const s = cur();
+  RUN.fb = null; RUN.sel = []; RUN.badSpots = [];
+  cancelAnimationFrame(RAF);
+  if (s.t==='quiz') RUN.opts = shuffle(s.o.slice());
+  if (s.t==='clean'){
+    RUN.dirty = Array.from({length:s.rows*s.cols}, ()=>Math.random()<0.55);
+    if (!RUN.dirty.some(Boolean)) RUN.dirty[0] = true;
+  }
+  if (s.t==='leak') RUN.leak = Math.floor(Math.random()*LEAK_PTS.length);
+  if (s.t==='slider') RUN.sv = s.min;
+  if (s.t==='bar'){ RUN.pos = 0; RUN.dir = 1; RAF = requestAnimationFrame(barLoop); }
+}
+
+function barLoop(){
+  if (!RUN) return;
+  const s = cur();
+  if (s.t!=='bar' || RUN.fb) return;
+  RUN.pos += RUN.dir * 1.4;
+  if (RUN.pos >= 100){ RUN.pos = 100; RUN.dir = -1; }
+  else if (RUN.pos <= 0){ RUN.pos = 0; RUN.dir = 1; }
+  const el = document.getElementById('bm');
+  if (el) el.style.left = RUN.pos + '%';
+  RAF = requestAnimationFrame(barLoop);
+}
+
+function finishRun(){
+  cancelAnimationFrame(RAF);
+  const {m, job, mist} = RUN;
+  const st = mist===0 ? 3 : mist<=2 ? 2 : 1;
+  const f = st===3 ? 1 : st===2 ? 0.8 : 0.55;
+  const reward = Math.round(job.reward*f/10)*10;
+  Object.entries(m.use.parts).forEach(([k,n]) => { S.parts[k] = (S.parts[k]||0) - n; });
+  Object.entries(m.use.chem).forEach(([k,n]) => { S.chem[k] = Math.max(0, (S.chem[k]||0) - n); });
+  S.money += reward; S.earned += reward;
+  S.xp += 40 + 30*st + (m.story ? 50 : 0);
+  S.rep = clamp(S.rep + ({3:2, 2:1, 1:-2})[st], 0, 100);
+  S.done++; S.jobsDone++;
+  S.jobs = S.jobs.filter(j=>j.uid!==job.uid);
+  if (m.story && m.story > S.story) S.story = m.story;
+  if (st===1 && job.tag!=='reklamace') S.callbacks.push({tid:m.id, client:job.client});
+  S.log.unshift({
+    id:uid(), day:S.day, date:new Date().toLocaleDateString('cs-CZ'),
+    client:job.client, addr:job.addr, title:m.title, work:m.work,
+    stars:st, mist, reward,
+    parts:Object.keys(m.use.parts).map(k=>PARTS[k].n), chem:{...m.use.chem}
+  });
+  ensureStory();
+  save(); beep(900);
+  RUN = null;
+  showModal(`<h2>Zakázka hotová</h2>
+    <p class="mut">${esc(m.title)} · ${esc(job.client)}</p>
+    <div class="stat"><span>Hodnocení</span><b class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</b></div>
+    <div class="stat"><span>Odměna</span><b class="ac">${kc(reward)}</b></div>
+    <div class="stat"><span>Zkušenost</span><b>+${40+30*st+(m.story?50:0)} XP</b></div>
+    <div class="stat"><span>Reputace</span><b>${({3:'+2',2:'+1',1:'−2'})[st]}</b></div>
+    <p class="mut">Protokol je uložen v záložce Protokoly.${st===1?' <span class="warn">Hodnocení 1★ – zákazník může reklamovat, reklamace přijde zítra.</span>':''}</p>`);
+}
+
+/* ---------------- DEN ---------------- */
+function endDay(){
+  if (!confirm('Ukončit den? Nedokončené zakázky propadnou.')) return;
+  const fees = S.contracts.reduce((a,id)=>a + (CONTRACTS.find(c=>c.id===id)?.fee || 0), 0);
+  S.money += fees - DAY_COST;
+  let note = '';
+  if (S.money < 0){ S.rep = clamp(S.rep-2, 0, 100); note = '<p class="bad-t">Záporný zůstatek: dodavatelé dílů nechtějí dodávat, reputace −2.</p>'; }
+  const finished = S.day;
+  S.day++; S.done = 0; S.jobs = genJobs(); VIEW = null; TAB = 'jobs';
+  save();
+  showModal(`<h2>Den ${finished} skončil</h2>
+    <div class="stat"><span>Provoz dílny a dodávky</span><b class="bad-t">−${kc(DAY_COST)}</b></div>
+    <div class="stat"><span>Smlouvy (poplatky)</span><b class="ok-t">+${kc(fees)}</b></div>
+    <div class="stat"><span>Zůstatek</span><b>${kc(S.money)}</b></div>${note}
+    <p class="mut">Den ${S.day}: přišly nové zakázky.</p>`);
+}
+
+/* ---------------- UI: horní lišta, navigace, modal, toast ---------------- */
+function renderTop(){
+  $('#top').innerHTML = `<div class="row">
+      <div><b>HVAC Technik</b> <span class="mut">· den ${S.day}</span></div>
+      <div><b class="${S.money<0?'bad-t':'ac'}">${kc(S.money)}</b></div></div>
+    <div class="row mut" style="font-size:13px;margin-top:4px">
+      <span>${title()} · úroveň ${lvl()}</span>
+      <span class="stars" title="Reputace ${S.rep}/100">${'★'.repeat(stars5())}${'☆'.repeat(5-stars5())}</span></div>`;
+}
+const TABS = [['jobs','📋','Zakázky'],['shop','🧰','Sklad'],['log','📒','Protokoly'],['guide','📖','Příručka'],['me','👤','Profil']];
+function renderNav(){
+  const nav = $('#nav');
+  nav.classList.toggle('hide', !!RUN);
+  nav.innerHTML = TABS.map(([k,i,n]) =>
+    `<button class="${TAB===k && !VIEW && !RUN ? 'on':''}" data-a="tab" data-v="${k}"><span class="ic">${i}</span>${n}</button>`).join('');
+}
+function showModal(h){
+  $('#modal').innerHTML = `<div class="sheet">${h}<button class="btn pri full" data-a="closemodal">Pokračovat</button></div>`;
+  $('#modal').classList.remove('hide');
+}
+function closeModal(){ $('#modal').classList.add('hide'); }
+let toastT = 0;
+function toast(t){
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('on'), 2000);
+}
+function beep(f=660, d=0.12){
+  if (!S || !S.sound) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.frequency.value = f; g.gain.value = 0.04;
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + d);
+  }catch(e){}
+  if (navigator.vibrate) navigator.vibrate(12);
+}
+
+/* ---------------- OBRAZOVKY ---------------- */
+function viewJobs(){
+  const left = slotsMax() - S.done;
+  const nxt = STORY[S.story];
+  const info = nxt
+    ? `Hlavní příběh ${S.story}/${STORY.length} · další: kapitola ${nxt.ch} – ${CHAPTERS[nxt.ch-1]}`
+    : 'Hlavní příběh dokončen. Pokračujte běžnými zakázkami a smlouvami.';
+  let h = `<div class="card" style="margin-top:0"><div class="mut">${info}</div>
+    <div class="prog"><i style="width:${S.story/STORY.length*100}%"></i></div>
+    <div class="row" style="margin-top:8px"><span>Volné sloty dnes</span><b class="${left>0?'ok-t':'bad-t'}">${left} / ${slotsMax()}</b></div></div>`;
+  if (!S.jobs.length) h += `<p class="card mut">Na dnes nejsou další zakázky. Ukončete den a přijdou nové.</p>`;
+  S.jobs.forEach(j => {
+    const m = TPL[j.tid];
+    const miss = missing(m);
+    const label = j.tag==='smlouva' ? 'Smlouva o údržbě'
+      : j.tag==='reklamace' ? 'Reklamace'
+      : j.main ? `Hlavní zakázka · ${CHAPTERS[m.ch-1]}`
+      : 'Běžná zakázka';
+    h += `<button class="card ${j.main?'main':''}" data-a="open" data-v="${j.uid}">
+      <div class="tag">${esc(label)}</div>
+      <div class="jt">${esc(m.title)}</div>
+      <div class="mut">${esc(j.client)} · ${esc(j.addr)}</div>
+      <div class="row" style="margin-top:8px"><b class="ac">${kc(j.reward)}</b>
+        <span class="${miss.length?'bad-t':'ok-t'}">${miss.length ? 'Chybí: '+esc(miss.join(', ')) : 'Připraveno'}</span></div>
+    </button>`;
+  });
+  h += `<button class="btn ghost full" data-a="endday">🌙 Ukončit den (provoz ${kc(DAY_COST)})</button>`;
+  return h;
+}
+
+function viewJob(id){
+  const j = S.jobs.find(x=>x.uid===id);
+  if (!j) return viewJobs();
+  const m = TPL[j.tid];
+  const full = S.done >= slotsMax();
+  const req = [
+    ...m.needs.tools.map(k => [TOOLS[k].n, S.tools.includes(k)]),
+    ...Object.entries(m.needs.parts).map(([k,n]) => [`${PARTS[k].n} ×${n}`, (S.parts[k]||0) >= n]),
+    ...Object.entries(m.needs.chem).map(([k,n]) => [`${CHEM[k].n} ${n} kg`, (S.chem[k]||0) >= n-1e-9])
+  ];
+  const reqHTML = req.length ? req.map(([n,ok]) =>
+    `<div class="stat"><span>${esc(n)}</span><b class="${ok?'ok-t':'bad-t'}">${ok?'✓ máte':'chybí – koupit ve Skladu'}</b></div>`).join('')
+    : `<div class="mut">Žádné speciální nástroje ani díly.</div>`;
+  const blocked = missing(m).length > 0;
+  return `<button class="link" data-a="back">← Zpět na zakázky</button>
+    <div class="tag">${j.main ? 'Hlavní zakázka · kapitola '+m.ch : 'Zakázka'}</div>
+    <h2>${esc(m.title)}</h2>
+    <div class="mut">${esc(j.client)} · ${esc(j.addr)}</div>
+    <p style="margin:12px 0">${esc(m.desc)}</p>
+    <div class="card">
+      <div class="stat"><span>Odměna (3★)</span><b class="ac">${kc(j.reward)}</b></div>
+      <div class="stat"><span>Kroků</span><b>${m.steps.length}</b></div>
+    </div>
+    <h3 class="mut" style="margin:14px 0 4px">Potřebujete</h3>
+    <div class="card" style="padding:4px 14px">${reqHTML}</div>
+    <button class="btn pri full" data-a="start" data-v="${j.uid}" ${blocked||full?'disabled':''}>Začít zakázku</button>
+    ${full ? '<p class="mut">Dnešní sloty jsou plné. Vyřešte to ukončením dne.</p>' : ''}
+    ${blocked ? '<p class="mut">Nejdřív si dokupte chybějící věci ve Skladu.</p>' : ''}`;
+}
+
+function viewRun(){
+  const s = cur(), n = RUN.m.steps.length, fb = RUN.fb;
+  let body = '';
+  if (s.t==='quiz'){
+    body = RUN.opts.map((o,k) => {
+      let c = '';
+      if (fb){ if (o[1]) c='ok'; else if (fb.pick===k) c='bad'; }
+      return `<button class="opt ${c}" data-a="ans" data-v="${k}" ${fb?'disabled':''}>${esc(o[0])}</button>`;
+    }).join('');
+  }
+  if (s.t==='tool'){
+    body = `<div class="tgrid">${s.o.map(k => `<button class="opt ${RUN.sel.includes(k)?'sel':''}" data-a="tool" data-v="${k}" ${fb?'disabled':''}>${esc(TOOLS[k].n)}</button>`).join('')}</div>`;
+    if (!fb) body += `<button class="btn pri full" data-a="toolchk" ${RUN.sel.length?'':'disabled'}>Potvrdit výběr</button>`;
+  }
+  if (s.t==='clean'){
+    body = `<div class="cells" style="grid-template-columns:repeat(${s.cols},1fr)">${RUN.dirty.map((d,i) =>
+      `<button class="cell ${d?'':'clean'}" data-a="cell" data-v="${i}" ${fb?'disabled':''} aria-label="${d?'špinavé':'čisté'} pole"></button>`).join('')}</div>
+      <p class="mut">Zbývá vyčistit: ${RUN.dirty.filter(Boolean).length}</p>`;
+  }
+  if (s.t==='leak'){
+    const hot = fb && fb.ok ? RUN.leak : -1;
+    body = `<svg viewBox="0 0 300 200" width="100%" role="img" aria-label="Schéma okruhu">
+      <rect x="10" y="120" width="100" height="60" rx="8" fill="#1e293b" stroke="#475569"/>
+      <text x="60" y="156" text-anchor="middle" fill="#94a3b8" font-size="13">Venkovní</text>
+      <rect x="200" y="20" width="90" height="50" rx="8" fill="#1e293b" stroke="#475569"/>
+      <text x="245" y="50" text-anchor="middle" fill="#94a3b8" font-size="13">Vnitřní</text>
+      <path d="M110 140 H150 V45 H200" fill="none" stroke="#f59e0b" stroke-width="4"/>
+      <path d="M110 165 H175 V70 H200" fill="none" stroke="#60a5fa" stroke-width="4"/>
+      ${LEAK_PTS.map(([x,y,l],i) => {
+        const ok = i===hot, bad = RUN.badSpots.includes(i);
+        const fill = ok ? 'rgba(34,197,94,.6)' : bad ? 'rgba(239,68,68,.6)' : 'rgba(56,189,248,.18)';
+        const st = ok ? '#22c55e' : bad ? '#ef4444' : '#38bdf8';
+        return `<g data-a="spot" data-v="${i}" style="cursor:${fb?'default':'pointer'}">
+          <circle cx="${x}" cy="${y}" r="17" fill="${fill}" stroke="${st}" stroke-width="2"/>
+          <text x="${x}" y="${y+5}" text-anchor="middle" fill="#e8eefc" font-size="14" font-weight="700">${l}</text></g>`;
+      }).join('')}
+    </svg>
+    ${RUN.badSpots.length && !fb ? '<p class="mut">Tady ne. Zkuste jiný spoj.</p>' : ''}`;
+  }
+  if (s.t==='bar'){
+    body = `<div class="bar"><div class="zone" style="left:${s.zone[0]}%;width:${s.zone[1]-s.zone[0]}%"></div>
+      <div class="mark" id="bm" style="left:${RUN.pos}%"></div></div>`;
+    if (!fb) body += `<button class="btn pri full" data-a="stop">ZASTAVIT</button>`;
+  }
+  if (s.t==='slider'){
+    body = `<div class="row"><span class="mut">Nastavená hodnota</span><b class="ac" id="slv">${RUN.sv} ${s.unit}</b></div>
+      <input type="range" data-a="sl" min="${s.min}" max="${s.max}" step="1" value="${RUN.sv}" ${fb?'disabled':''}>
+      <div class="row mut"><span>${s.min} ${s.unit}</span><span>${s.max} ${s.unit}</span></div>`;
+    if (!fb) body += `<button class="btn pri full" data-a="chk">Potvrdit hodnotu</button>`;
+  }
+  const fbHTML = fb ? `<div class="fb ${fb.ok?'good':'bad'}">${esc(fb.text)}</div>` : '';
+  let nextBtn = '';
+  if (fb){
+    nextBtn = fb.retry
+      ? `<button class="btn pri full" data-a="retry">Zkusit znovu</button>`
+      : `<button class="btn pri full" data-a="next">${RUN.i+1<n ? 'Dál' : 'Dokončit zakázku'}</button>`;
+  }
+  return `<div class="row"><button class="link" data-a="cancel">✕ Zrušit zakázku</button><span class="mut">Chyby: ${RUN.mist}</span></div>
+    <div class="prog"><i style="width:${RUN.i/n*100}%"></i></div>
+    <p class="mut" style="margin:10px 0 0">${esc(RUN.m.title)} · krok ${RUN.i+1} z ${n}</p>
+    <h3 class="q">${esc(s.q)}</h3>
+    ${body}${fbHTML}${nextBtn}`;
+}
+
+function viewShop(){
+  const row = (label, action) => `<div class="stat" style="align-items:center"><div>${label}</div><div>${action}</div></div>`;
+  const buy = (lbl, act, v, dis) => `<button class="btn sm" data-a="${act}" data-v="${v}" ${dis?'disabled':''}>${lbl}</button>`;
+  let h = `<h2>Sklad a dílna</h2><div class="mut">Peníze: <b class="ac">${kc(S.money)}</b></div>`;
+  h += `<div class="sec"><h3>Nástroje</h3><div class="card" style="padding:4px 14px">`;
+  h += Object.entries(TOOLS).filter(([k,t])=>t.p>0).map(([k,t]) =>
+    row(esc(t.n), S.tools.includes(k) ? '<span class="ok-t">Vlastníte</span>' : buy(kc(t.p), 'buy-tool', k, S.money<t.p))).join('');
+  h += `</div></div>`;
+  h += `<div class="sec"><h3>Náhradní díly (skladem)</h3><div class="card" style="padding:4px 14px">`;
+  h += Object.entries(PARTS).map(([k,p]) =>
+    row(`${esc(p.n)}<br><span class="mut">skladem: ${S.parts[k]||0}</span>`, buy('+1 · '+kc(p.p), 'buy-part', k, S.money<p.p))).join('');
+  h += `</div></div>`;
+  h += `<div class="sec"><h3>Chladiva</h3><div class="card" style="padding:4px 14px">`;
+  h += Object.entries(CHEM).map(([k,c]) =>
+    row(`${esc(c.n)}<br><span class="mut">skladem: ${(S.chem[k]||0).toFixed(1)} kg · GWP ${c.gwp}</span>`, buy('+1 kg · '+kc(c.p), 'buy-chem', k, S.money<c.p))).join('');
+  h += `</div></div>`;
+  h += `<div class="sec"><h3>Dodávka</h3><div class="card" style="padding:4px 14px">`;
+  h += VAN.map((v,i) => row(esc(v.n),
+    i < S.van ? '<span class="ok-t">Koupeno</span>'
+    : i === S.van ? buy(kc(v.p), 'buy-van', i, S.money<v.p)
+    : '<span class="mut">nejdřív předchozí</span>')).join('');
+  h += `</div></div>`;
+  h += `<div class="sec"><h3>Servisní smlouvy</h3>`;
+  h += CONTRACTS.map(c => {
+    const signed = S.contracts.includes(c.id);
+    const okReq = S.story>=c.minStory && S.rep>=c.minRep;
+    const need = [c.minStory>S.story ? `hlavní zakázka ${c.minStory}` : '', c.minRep>S.rep ? `reputace ${c.minRep}` : ''].filter(Boolean).join(', ');
+    return `<div class="card"><div class="jt" style="font-size:16px">${esc(c.n)}</div>
+      <div class="mut">Každý den garantovaná zakázka · poplatek ${kc(c.fee)} denně</div>
+      <div style="margin-top:8px">${signed ? '<span class="ok-t">Podepsáno</span>'
+        : okReq ? buy('Podepsat', 'sign', c.id, false)
+        : `<span class="mut">Vyžaduje: ${esc(need)}</span>`}</div></div>`;
+  }).join('');
+  h += `</div>`;
+  return h;
+}
+
+function viewLog(){
+  if (LOGV){
+    const p = S.log.find(x=>x.id===LOGV);
+    if (p) return `<button class="link" data-a="logback">← Zpět na protokoly</button>
+      <h2>${esc(p.title)}</h2>
+      <div class="mut">${esc(p.client)} · ${esc(p.addr)} · ${p.date}</div>
+      <div class="stat"><span>Hodnocení</span><b class="stars">${'★'.repeat(p.stars)}${'☆'.repeat(3-p.stars)}</b></div>
+      <div class="stat"><span>Odměna</span><b>${kc(p.reward)}</b></div>
+      <pre class="proto">${esc(protoText(p))}</pre>
+      <button class="btn pri full" data-a="copy" data-v="${p.id}">Kopírovat protokol</button>`;
+    LOGV = null;
+  }
+  let h = `<h2>Protokoly</h2>`;
+  if (!S.log.length) h += `<p class="card mut">Zatím žádné protokoly. Dokončete první zakázku.</p>`;
+  S.log.forEach(p => {
+    h += `<button class="card" data-a="logv" data-v="${p.id}">
+      <div class="row"><b>${esc(p.title)}</b><span class="stars">${'★'.repeat(p.stars)}${'☆'.repeat(3-p.stars)}</span></div>
+      <div class="mut">${esc(p.client)} · den ${p.day} · ${kc(p.reward)}</div></button>`;
+  });
+  const tot = {};
+  S.log.forEach(p => Object.entries(p.chem||{}).forEach(([k,kg]) => tot[k] = (tot[k]||0) + kg));
+  h += `<div class="sec"><h3>Evidence F-plynů</h3><div class="card">`;
+  h += Object.keys(CHEM).map(k => {
+    const kg = tot[k]||0, t = kg*CHEM[k].gwp/1000;
+    return `<div class="stat"><span>${CHEM[k].n}: ${kg.toFixed(1)} kg</span><b>${t.toFixed(3)} t CO₂e</b></div>`;
+  }).join('');
+  const sumT = Object.entries(tot).reduce((a,[k,kg]) => a + kg*CHEM[k].gwp/1000, 0);
+  h += `<div class="stat"><span>Celkem doplněno</span><b>${sumT.toFixed(3)} t CO₂e</b></div>
+    ${sumT>=5 ? '<p class="warn">Nad 5 t CO₂e: u zařízení platí povinná pravidelná kontrola těsnosti (zjednodušeně, ověřte aktuální předpisy).</p>' : '<p class="mut">Zjednodušená herní evidence. V reálu vedete záznamy o každém doplnění.</p>'}
+    </div></div>`;
+  return h;
+}
+function protoText(p){
+  return `SERVISNÍ PROTOKOL
+Den ${p.day} · ${p.date}
+Zákazník: ${p.client}
+Místo: ${p.addr}
+Zakázka: ${p.title}
+Technik: ${S.name || '—'}
+
+Provedené práce: ${p.work}
+Použité díly: ${p.parts.join(', ') || '—'}
+Doplněné chladivo: ${Object.entries(p.chem||{}).map(([k,kg])=>k+' '+kg+' kg').join(', ') || '—'}
+Hodnocení: ${p.stars}/3 (chyb při práci: ${p.mist})`;
+}
+
+const GUIDE = [
+  ['Přehřátí (superheat)', 'Přehřátí = teplota sacího potrubí − teplota varu odpovídající sacímu tlaku. Cíl u expanzního ventilu bývá 5–8 K. Malé přehřátí hrozí kapalinou v kompresoru, velké snižuje výkon.'],
+  ['Podchlazení (subcooling)', 'Podchlazení = teplota kondenzace − teplota kapaliny za kondenzátorem. Typicky 3–6 K. Nízké podchlazení bývá málo chladiva, vysoké přebytek.'],
+  ['Tlak a teplota chladiva (P-T)', 'Každý tlak odpovídá jedné teplotě varu/kondenzace. Z manometrické sady a P-T tabulky zjistíte teplotu nasycených par. Na tom stojí výpočet přehřátí a podchlazení.'],
+  ['PT1000 a Pt100', 'PT1000 má 1000 Ω při 0 °C a přibližně 1385 Ω při 100 °C (zhruba +3,85 Ω na °C). Pt100 má 100 Ω při 0 °C.'],
+  ['Signál 4–20 mA', '4 mA = nulová hodnota rozsahu, 20 mA = plný rozsah. Hodnota = (I − 4) / 16 × rozsah. Hodnota 0 mA často znamená přerušený vodič.'],
+  ['Ekvitermní regulace', 'Výstupní teplota topné vody se řídí podle venkovní teploty: čím chladněji venku, tím vyšší výstup. Křivka se nastavuje podle budovy a soustavy.'],
+  ['PID regulátor', 'P reaguje na aktuální odchylku. I odstraňuje trvalou odchylku. D předvídá změnu a tlumí překmity. Příliš velké P vede ke kmitání.'],
+  ['F-plyny a GWP', 'GWP říká, kolikrát víc přispívá látka ke skleníkovému efektu než CO₂. R32 má 675, R454B 466, R410A 2088, R134a 1430. Emise v t CO₂e = kg × GWP / 1000. Od 5 t CO₂e platí povinná pravidelná kontrola těsnosti (zjednodušeně).'],
+  ['Bezpečnost', 'Vždy odpojte a zajistěte napájení a označte pracoviště. Chladivo nevypouštějte do ovzduší, používejte rekuperaci. U tlakových zařízení noste ochranné pomůcky.'],
+  ['Postup servisu', 'Rozhovor se zákazníkem → změřit → opravit → ověřit (těsnost, provozní hodnoty) → zapsat do protokolu. Dobrý protokol chrání vás i zákazníka.']
+];
+function viewGuide(){
+  return `<h2>Příručka technika</h2><p class="mut">Krátký přehled pojmů, se kterými se v zakázkách setkáte.</p>
+    <div class="card" style="padding:0 14px">` +
+    GUIDE.map(([t,x]) => `<details><summary>${esc(t)}</summary><p>${esc(x)}</p></details>`).join('') +
+    `</div>`;
+}
+
+function viewProfile(){
+  return `<h2>Profil technika</h2>
+    <label class="lbl" for="nm">Jméno technika</label>
+    <input type="text" id="nm" data-a="name" value="${esc(S.name)}" placeholder="Např. Honza" maxlength="30">
+    <div class="card">
+      <div class="stat"><span>Titul</span><b>${title()}</b></div>
+      <div class="stat"><span>Úroveň / zkušenost</span><b>${lvl()} / ${S.xp} XP</b></div>
+      <div class="stat"><span>Dokončené zakázky</span><b>${S.jobsDone}</b></div>
+      <div class="stat"><span>Celkem vyděláno</span><b>${kc(S.earned)}</b></div>
+      <div class="stat"><span>Reputace</span><b>${S.rep} / 100</b></div>
+      <div class="stat"><span>Hlavní příběh</span><b>${S.story} / ${STORY.length}</b></div>
+    </div>
+    <button class="btn full" data-a="sound">Zvuk: ${S.sound?'zapnutý':'vypnutý'}</button>
+    <button class="btn full" data-a="reset" style="color:#f87171">Smazat hru a začít znovu</button>
+    <p class="mut">Postup se ukládá jen v tomto zařízení a prohlížeči. Hra je pro zábavu a výuku, ne jako návod k práci s chladivy.</p>`;
+}
+
+/* ---------------- RENDER ---------------- */
+function render(){
+  renderTop();
+  let h;
+  if (RUN) h = viewRun();
+  else if (VIEW) h = viewJob(VIEW);
+  else if (TAB==='jobs') h = viewJobs();
+  else if (TAB==='shop') h = viewShop();
+  else if (TAB==='log') h = viewLog();
+  else if (TAB==='guide') h = viewGuide();
+  else h = viewProfile();
+  $('#app').innerHTML = h;
+  renderNav();
+}
+
+/* ---------------- OVLÁDÁNÍ (delegace) ---------------- */
+function act(a, v){
+  switch(a){
+    case 'tab': TAB = v; VIEW = null; LOGV = null; break;
+    case 'open': VIEW = v; break;
+    case 'back': VIEW = null; break;
+    case 'start': startRun(v); return;
+    case 'endday': endDay(); break;
+    case 'closemodal': closeModal(); break;
+
+    case 'ans': {
+      if (!RUN || RUN.fb) break;
+      const o = RUN.opts[+v];
+      if (!o[1]) RUN.mist++;
+      RUN.fb = {ok:o[1], text:o[2], pick:+v};
+      beep(o[1]?700:200);
+      break;
+    }
+    case 'tool': {
+      if (!RUN || RUN.fb) break;
+      RUN.sel = RUN.sel.includes(v) ? RUN.sel.filter(x=>x!==v) : [...RUN.sel, v];
+      break;
+    }
+    case 'toolchk': {
+      if (!RUN || RUN.fb) break;
+      const s = cur();
+      const ok = s.want.length===RUN.sel.length && s.want.every(x=>RUN.sel.includes(x));
+      if (!ok) RUN.mist++;
+      const want = s.want.map(k=>TOOLS[k].n).join(', ');
+      RUN.fb = {ok, text: ok ? 'Správně. '+(s.w||'') : 'Nesprávný výběr. '+(s.w||'')+' Správně: '+want+'.'};
+      beep(ok?700:200);
+      break;
+    }
+    case 'cell': {
+      if (!RUN || RUN.fb) break;
+      const i = +v;
+      if (RUN.dirty[i]){
+        RUN.dirty[i] = false; beep(520, 0.05);
+        if (!RUN.dirty.some(Boolean)) RUN.fb = {ok:true, text:'Všechny lamely jsou čisté. '+(cur().w||'')};
+      }
+      break;
+    }
+    case 'spot': {
+      if (!RUN || RUN.fb) break;
+      const i = +v;
+      if (i===RUN.leak){ RUN.fb = {ok:true, text:'Správně! Netěsnost je na spoji '+LEAK_PTS[i][2]+'. Spoj opravíte a ověříte tlakovou zkouškou.'}; beep(800); }
+      else if (!RUN.badSpots.includes(i)){ RUN.mist++; RUN.badSpots.push(i); beep(200); }
+      break;
+    }
+    case 'sl': break;
+    case 'chk': {
+      if (!RUN || RUN.fb) break;
+      const s = cur(), x = RUN.sv;
+      const ok = x>=s.target[0] && x<=s.target[1];
+      if (ok) RUN.fb = {ok:true, text:'Výborně, hodnota je v cílovém rozsahu ('+s.target[0]+'–'+s.target[1]+' '+s.unit+').'};
+      else { RUN.mist++; RUN.fb = {ok:false, retry:true, text: x<s.target[0] ? s.hintLow : s.hintHigh}; }
+      beep(ok?700:200);
+      break;
+    }
+    case 'stop': {
+      if (!RUN || RUN.fb) break;
+      const s = cur();
+      cancelAnimationFrame(RAF);
+      const ok = RUN.pos>=s.zone[0] && RUN.pos<=s.zone[1];
+      if (ok) RUN.fb = {ok:true, text:'Správně. '+(s.w||'')};
+      else { RUN.mist++; RUN.fb = {ok:false, retry:true, text:'Mimo zónu (teď '+Math.round(RUN.pos)+' %). Zkuste to znovu.'}; }
+      beep(ok?700:200);
+      break;
+    }
+    case 'retry': {
+      if (!RUN) break;
+      RUN.fb = null;
+      if (cur().t==='bar'){ RUN.pos = 0; RUN.dir = 1; cancelAnimationFrame(RAF); RAF = requestAnimationFrame(barLoop); }
+      break;
+    }
+    case 'next': {
+      if (!RUN) break;
+      RUN.i++;
+      if (RUN.i >= RUN.m.steps.length){ finishRun(); return; }
+      prepStep();
+      break;
+    }
+    case 'cancel': {
+      if (!RUN) break;
+      if (!confirm('Opravdu zrušit zakázku? Ztratíte 1 bod reputace a nic nevyděláte.')) break;
+      cancelAnimationFrame(RAF);
+      S.rep = clamp(S.rep-1, 0, 100);
+      RUN = null;
+      break;
+    }
+
+    case 'buy-tool': {
+      const t = TOOLS[v];
+      if (S.money>=t.p && !S.tools.includes(v)){ S.money -= t.p; S.tools.push(v); toast('Koupeno: '+t.n); }
+      break;
+    }
+    case 'buy-part': {
+      const p = PARTS[v];
+      if (S.money>=p.p){ S.money -= p.p; S.parts[v] = (S.parts[v]||0)+1; toast('Na skladě: '+p.n); }
+      break;
+    }
+    case 'buy-chem': {
+      const c = CHEM[v];
+      if (S.money>=c.p){ S.money -= c.p; S.chem[v] = (S.chem[v]||0)+1; toast('Koupen 1 kg '+v); }
+      break;
+    }
+    case 'buy-van': {
+      const x = VAN[+v];
+      if (+v===S.van && S.money>=x.p){ S.money -= x.p; S.van++; toast('Dodávka vylepšena. Víc zakázek denně.'); }
+      break;
+    }
+    case 'sign': {
+      const c = CONTRACTS.find(x=>x.id===v);
+      if (c && !S.contracts.includes(v) && S.story>=c.minStory && S.rep>=c.minRep){
+        S.contracts.push(v);
+        S.jobs.push(contractJob(c));
+        toast('Smlouva podepsána. Dnešní zakázka je přidána.');
+      }
+      break;
+    }
+
+    case 'logv': LOGV = v; break;
+    case 'logback': LOGV = null; break;
+    case 'copy': {
+      const p = S.log.find(x=>x.id===v);
+      if (!p) break;
+      const txt = protoText(p);
+      const ok = () => toast('Protokol zkopírován do schránky');
+      const fail = () => toast('Kopírování se nepovedlo. Text označte ručně.');
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fail);
+      else fail();
+      return;
+    }
+
+    case 'sound': S.sound = !S.sound; break;
+    case 'reset': {
+      if (!confirm('Opravdu smazat celou hru a začít od začátku?')) return;
+      RUN = null; VIEW = null; LOGV = null; TAB = 'jobs';
+      S = fresh(); S.jobs = genJobs(); ensureStory(); save(); render(); return;
+    }
+  }
+  save();
+  render();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-a]');
+  if (!t || t.disabled) return;
+  act(t.dataset.a, t.dataset.v);
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.a === 'sl' && RUN){
+    RUN.sv = +t.value;
+    const el = $('#slv'); if (el) el.textContent = t.value + ' ' + cur().unit;
+  }
+  if (t.dataset.a === 'name'){ S.name = t.value.slice(0,30); save(); }
+});
+
+/* ---------------- START ---------------- */
+load();
+save();
+render();
+if ('serviceWorker' in navigator){ /* hra funguje offline přímo z jednoho souboru */ }
+</script>
+</body>
+</html>
