@@ -24,7 +24,7 @@ const ICONS = {
 const STATIONS = [
   {
     key: 'vytapeni', abbr: 'Teplo', name: 'Kotelna', service: 'Vytápění', icon: 'flame',
-    color: 0xff6b2c, css: '#ff6b2c', supply: 0xff4d2e, ret: 0x3b82f6, kind: 'pipes',
+    color: 0xe4161c, css: '#ef3b40', supply: 0xff3030, ret: 0x3b82f6, kind: 'pipes',
     eyebrow: 'Vytápění · kotelny',
     title: 'Teplo spolehlivě a bez plýtvání',
     text: 'Navrhujeme, montujeme a modernizujeme plynové kotelny pro bytové domy, firmy i veřejné budovy. Od výměny kotle po kompletní rekonstrukci strojovny.',
@@ -34,7 +34,7 @@ const STATIONS = [
   },
   {
     key: 'tc', abbr: 'TČ', name: 'Tepelná čerpadla', service: 'Tepelná čerpadla', icon: 'pump',
-    color: 0x22c55e, css: '#22c55e', supply: 0xf59e0b, ret: 0x22c55e, kind: 'pipes',
+    color: 0x22c55e, css: '#22c55e', supply: 0xff3030, ret: 0x3b82f6, kind: 'pipes',
     eyebrow: 'Obnovitelné zdroje',
     title: 'Tepelná čerpadla navržená na reálný provoz',
     text: 'Správně nadimenzované tepelné čerpadlo s dobrou regulací ušetří roky provozních nákladů. Řešíme samostatné i hybridní systémy s kotlem.',
@@ -44,7 +44,7 @@ const STATIONS = [
   },
   {
     key: 'mar', abbr: 'MaR', name: 'Řídicí systém', service: 'MaR', icon: 'chip',
-    color: 0xf59e0b, css: '#f59e0b', supply: 0xfbbf24, ret: 0xfbbf24, kind: 'cable',
+    color: 0xb4366a, css: '#c0457a', supply: 0xe0508a, ret: 0xe0508a, kind: 'cable',
     eyebrow: 'Měření a regulace',
     title: 'Mozek celé budovy',
     text: 'MaR propojuje všechny technologie do jednoho systému. Čidla měří, regulátory rozhodují, akční členy jednají – a vy vidíte celý provoz na jedné obrazovce.',
@@ -54,7 +54,7 @@ const STATIONS = [
   },
   {
     key: 'chlazeni', abbr: 'Klima', name: 'Klimatizace a chlazení', service: 'Klimatizace', icon: 'snow',
-    color: 0x38bdf8, css: '#38bdf8', supply: 0x38bdf8, ret: 0x93c5fd, kind: 'pipes',
+    color: 0x3a8ee0, css: '#4a90d9', supply: 0x3a8ee0, ret: 0x93c5fd, kind: 'pipes',
     eyebrow: 'Klimatizace · VRV/VRF · chlazení',
     title: 'Příjemných 22 °C i v nejparnějším létě',
     text: 'Klimatizace a VRV/VRF systémy pro kanceláře, obchody a úřady, chillery a chladicí centrály pro výrobu a technologie. Navržené tiše, úsporně a s napojením na řízení budovy.',
@@ -64,7 +64,7 @@ const STATIONS = [
   },
   {
     key: 'vzt', abbr: 'VZT', name: 'Rekuperace a VZT', service: 'Rekuperace', icon: 'wind',
-    color: 0x2dd4bf, css: '#2dd4bf', supply: 0x99f6e4, ret: 0x99f6e4, kind: 'duct',
+    color: 0x9fbbd8, css: '#9fbbd8', supply: 0xd6e4f2, ret: 0xd6e4f2, kind: 'duct',
     eyebrow: 'Rekuperace · vzduchotechnika',
     title: 'Čerstvý vzduch bez tepelných ztrát',
     text: 'Vzduchotechnické jednotky s rekuperací, rozvody vzduchu a jejich regulace podle CO₂ a obsazenosti. Komfort pro lidi, úspora pro budovu.',
@@ -216,7 +216,7 @@ function initScene() {
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.95, metalness: 0.1 }));
   floor.rotation.x = -Math.PI / 2;
   scene.add(floor);
-  const grid = new THREE.GridHelper(240, 120, 0x3a2a0c, 0x151c2a);
+  const grid = new THREE.GridHelper(240, 120, 0x1d3456, 0x141b29);
   grid.material.transparent = true; grid.material.opacity = 0.55;
   grid.position.y = 0.01;
   scene.add(grid);
@@ -301,7 +301,7 @@ function initScene() {
       });
       const ledMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.09, 0.09, 0.03), new THREE.MeshBasicMaterial({ toneMapped: false }), leds.length);
       const m4 = new THREE.Matrix4(); const col = new THREE.Color();
-      const palette = [0x22c55e, 0x22c55e, 0x22c55e, 0xf59e0b, 0x0f172a, 0x38bdf8];
+      const palette = [0x22c55e, 0x22c55e, 0x22c55e, 0xe4161c, 0x0f172a, 0x4a90d9];
       leds.forEach((p, k) => { m4.makeTranslation(p.x, p.y, p.z); ledMesh.setMatrixAt(k, m4); ledMesh.setColorAt(k, col.set(palette[k % palette.length])); });
       g.add(ledMesh);
       let acc = 0;
@@ -326,18 +326,18 @@ function initScene() {
         series[0].push(55 + Math.sin(t / 2) * 3 + (Math.random() - 0.5)); series[1].push(42 + Math.sin(t / 2.6) * 2 + (Math.random() - 0.5) * 0.6); series[2].push(4 + Math.sin(t / 5) * 3);
         series.forEach((a) => a.length > N && a.shift());
         ctx.fillStyle = '#0b1220'; ctx.fillRect(0, 0, 640, 400);
-        ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 26px Arial'; ctx.fillText('INNTEO BMS', 24, 42);
+        ctx.fillStyle = '#ef3b40'; ctx.font = 'bold 26px Arial'; ctx.fillText('INNTEO BMS', 24, 42);
         ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(600, 34, 8, 0, 7); ctx.fill();
         ctx.fillStyle = '#64748b'; ctx.font = '18px Arial'; ctx.fillText('ONLINE', 510, 41);
         ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
         for (let y = 90; y <= 290; y += 50) { ctx.beginPath(); ctx.moveTo(24, y); ctx.lineTo(616, y); ctx.stroke(); }
-        const cols = ['#ff6b2c', '#38bdf8', '#22c55e'];
+        const cols = ['#ef3b40', '#4a90d9', '#22c55e'];
         series.forEach((a, si) => {
           ctx.strokeStyle = cols[si]; ctx.lineWidth = 3; ctx.beginPath();
           a.forEach((v, k) => { const x = 24 + (k / (N - 1)) * 592; const y = 300 - (v / 70) * 210; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
           ctx.stroke();
         });
-        const labels = [['Přívod', series[0].at(-1), '#ff6b2c'], ['Zpátečka', series[1].at(-1), '#38bdf8'], ['Venku', series[2].at(-1), '#22c55e']];
+        const labels = [['Přívod', series[0].at(-1), '#ef3b40'], ['Zpátečka', series[1].at(-1), '#4a90d9'], ['Venku', series[2].at(-1), '#22c55e']];
         labels.forEach(([l, v, c], k) => {
           const x = 24 + k * 200; ctx.fillStyle = '#111c30'; ctx.fillRect(x, 318, 184, 62);
           ctx.fillStyle = '#94a3b8'; ctx.font = '16px Arial'; ctx.fillText(l, x + 12, 340);
@@ -369,12 +369,12 @@ function initScene() {
       const wc = document.createElement('canvas'); wc.width = wc.height = 256;
       const w = wc.getContext('2d');
       w.fillStyle = '#1f2937'; w.beginPath(); w.arc(128, 128, 126, 0, 7); w.fill();
-      w.strokeStyle = '#2dd4bf'; w.lineWidth = 2;
+      w.strokeStyle = '#4a90d9'; w.lineWidth = 2;
       for (let r = 20; r < 126; r += 9) { w.beginPath(); w.arc(128, 128, r, 0, 7); w.stroke(); }
       w.lineWidth = 6; w.strokeStyle = '#94a3b8';
       for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; w.beginPath(); w.moveTo(128, 128); w.lineTo(128 + Math.cos(a) * 126, 128 + Math.sin(a) * 126); w.stroke(); }
       const wheelTex = new THREE.CanvasTexture(wc); wheelTex.colorSpace = THREE.SRGBColorSpace;
-      const wheel = new THREE.Mesh(new THREE.CircleGeometry(1.05, 48), new THREE.MeshStandardMaterial({ map: wheelTex, emissive: 0x0f766e, emissiveIntensity: 0.4, metalness: 0.4, roughness: 0.5 }));
+      const wheel = new THREE.Mesh(new THREE.CircleGeometry(1.05, 48), new THREE.MeshStandardMaterial({ map: wheelTex, emissive: 0x1d5a95, emissiveIntensity: 0.4, metalness: 0.4, roughness: 0.5 }));
       wheel.position.set(-1.2, 1.65, 1.01); g.add(wheel);
       const f = fan(0.85); f.group.position.set(3.4, 1.65, 1.01); g.add(f.group);
       updaters.push((t, dt, a) => { wheel.rotation.z -= dt * (a ? 1.4 : 0.6); f.blades.rotation.z -= dt * (a ? 11 : 5); });
@@ -407,11 +407,11 @@ function initScene() {
   });
 
   /* --- rozdělovač --- */
-  const header = cyl(0.75, 0.75, 28, mat(0xb45309, { metalness: 0.6, roughness: 0.35 }), 32);
+  const header = cyl(0.75, 0.75, 28, mat(0x8a1c24, { metalness: 0.65, roughness: 0.32 }), 32);
   header.rotation.z = Math.PI / 2; header.position.set(0, 1.4, HEADER_Z); scene.add(header);
   [-14, 14].forEach((x) => { const cap = new THREE.Mesh(new THREE.SphereGeometry(0.75, 24, 12), header.material); cap.position.set(x, 1.4, HEADER_Z); scene.add(cap); });
   for (let x = -12; x <= 12; x += 6) { const leg = box(0.25, 0.7, 0.25, mat(0x374151)); leg.position.set(x, 0.35, HEADER_Z); scene.add(leg); }
-  const headerGlow = glow(0xf59e0b, 30, 0.12); headerGlow.position.set(0, 1.5, HEADER_Z); scene.add(headerGlow);
+  const headerGlow = glow(0xe4161c, 30, 0.1); headerGlow.position.set(0, 1.5, HEADER_Z); scene.add(headerGlow);
 
   /* --- potrubní trasy + proudění --- */
   const flows = [];
@@ -491,7 +491,7 @@ function initScene() {
     const k = a < 1 ? 1.75 : a < 1.4 ? 1.25 : 1;
     overview.pos.set(0, 27 * k, 46 * k);
     // na širokém displeji posunout scénu doprava od textu, na mobilu nahoru nad text
-    overview.look.set(a > 1.3 ? -13 : 0, a < 1 ? -9 : 0, -9);
+    overview.look.set(a > 1.3 ? -17 : 0, a < 1 ? -9 : 0, -9);
   }
   function camRoute(s, i) {
     const view = s.pos.clone().addScaledVector(s.toHub.clone().applyAxisAngle(up, i % 2 ? -0.75 : 0.75), 16); view.y = 7.2;
@@ -539,7 +539,7 @@ function initScene() {
     document.body.classList.add('flying');
     setActive(i);
     flightName.textContent = target ? target.name : 'Přehled strojovny';
-    flightEl.style.setProperty('--fc', target ? target.css : '#F59E0B');
+    flightEl.style.setProperty('--fc', target ? target.css : '#E4161C');
   };
 
   function endFlight() {
