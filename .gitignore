@@ -4,3 +4,6 @@ ios/
 *.apk
 *.aab
 .DS_Store
+
+# Rozbalený zip Sellbirdu (cizí projekt, ne součást repozitáře)
+sellbird-main/
